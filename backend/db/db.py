@@ -1,25 +1,26 @@
 import os
 import time
+
 import pymysql.cursors
 
-from backend.schemas.user import User
-from .init_db import create_tables
 from backend.log import get_logger
+from backend.schemas.user import User
 
+from .init_db import create_tables
 
 logger = get_logger(__name__)
 
 
 def get_connection():
     return pymysql.connect(
-            host=os.getenv('MYSQL_HOST'),
-            port=int(os.getenv('MYSQL_PORT')),
-            database=os.getenv('MYSQL_DATABASE'),
-            user=os.getenv('MYSQL_ROOT_USER'),
-            password=os.getenv('MYSQL_ROOT_PASSWORD'),
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor
-        )
+        host=os.getenv("MYSQL_HOST"),
+        port=int(os.getenv("MYSQL_PORT")),
+        database=os.getenv("MYSQL_DATABASE"),
+        user=os.getenv("MYSQL_ROOT_USER"),
+        password=os.getenv("MYSQL_ROOT_PASSWORD"),
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+    )
 
 
 ready = False
@@ -29,11 +30,11 @@ while not ready:
         conn = get_connection()
         ready = True
     except Exception as e:
-        logger.info(f'trying to connect to bd...\n{e}')
+        logger.info(f"trying to connect to bd...\n{e}")
         time.sleep(3)
         retry -= 1
         if not retry:
-            msg = 'Maximum number of db connection retries exceeded'
+            msg = "Maximum number of db connection retries exceeded"
             logger.error(msg)
             raise RuntimeError(msg)
 
@@ -46,17 +47,17 @@ def get_dbcursor():
 
 def is_user_exist(username: str) -> bool:
     cursor = conn.cursor()
-    query = ''' SELECT username
+    query = """ SELECT username
                 FROM users
                 WHERE username=%s;
-            '''
+            """
     cnt = cursor.execute(query, (username))
     return True if cnt else False
 
 
 def insert_into_user(user: User) -> User:
     cursor = conn.cursor()
-    query = ''' INSERT INTO users (
+    query = """ INSERT INTO users (
                     username,
                     first_name,
                     last_name,
@@ -64,20 +65,38 @@ def insert_into_user(user: User) -> User:
                     bio,
                     city,
                     country,
-                    password)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            '''
-    cursor.execute(query, (user.username,
-                           user.first_name,
-                           user.last_name,
-                           user.age,
-                           user.bio,
-                           user.city,
-                           user.country,
-                           user.password)
+                    password,
+                    disabled)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+    cursor.execute(
+        query,
+        (
+            user.username,
+            user.first_name,
+            user.last_name,
+            user.age,
+            user.bio,
+            user.city,
+            user.country,
+            user.password,
+            user.disabled,
+        ),
     )
-    logger.debug(f'{cursor.lastrowid=}')
+    logger.debug(f"{cursor.lastrowid=}")
     conn.commit()
     user.id = cursor.lastrowid
-    logger.debug(f'{cursor.lastrowid=}')
+    logger.debug(f"{cursor.lastrowid=}")
     cursor.close()
+
+
+def get_user_by_username(username: str) -> User:
+    cursor = conn.cursor()
+    query = """ SELECT *
+                FROM users
+                WHERE username=%s;
+            """
+    cursor.execute(query, (username))
+    user_dict = cursor.fetchone()
+    cursor.close()
+    return User(**user_dict)

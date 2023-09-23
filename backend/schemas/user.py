@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -12,3 +13,4 @@ class User(BaseModel):
     city: str
     country: str
     password: str
+    disabled: bool | None = False
