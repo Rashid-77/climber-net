@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pymysql
+PyMySQL[rsa]
+passlib[bcrypt]
+
+# dev
+pytest
