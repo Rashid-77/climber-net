@@ -9,7 +9,7 @@ from backend.db import db
 
 from .log import get_logger
 from .schemas.token import TokenData
-from .schemas.user import User
+from .schemas.user import User, UserCreate, UserToDB
 from .utils.security import ACCESS_TOKEN_EXPIRE_MINUTES  # noqa
 from .utils.security import create_access_token  # noqa
 from .utils.security import decode_access_token  # noqa
@@ -19,15 +19,16 @@ logger = get_logger(__name__)
 app = FastAPI()
 
 
-@app.post("/user/register/")
-def register(user: User):
+@app.post("/user/register/", response_model=User)
+def register(user: UserCreate):
     if db.is_user_exist(user.username):
-        return {"msg": "User already exist"}
-
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this username already exists in the system.",
+        )
     user.password = get_password_hash(user.password)
-    user.disabled = False
-    user = db.insert_into_user(user)
-    return {"msg": "User created"}
+    user = db.insert_into_user(UserToDB(**user.dict()))
+    return user
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -81,9 +82,14 @@ def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user",
+        )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.id}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 

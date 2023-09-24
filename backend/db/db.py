@@ -4,7 +4,7 @@ import time
 import pymysql.cursors
 
 from backend.log import get_logger
-from backend.schemas.user import User
+from backend.schemas.user import User, UserInDB, UserToDB
 
 from .init_db import create_tables
 
@@ -55,7 +55,7 @@ def is_user_exist(username: str) -> bool:
     return True if cnt else False
 
 
-def insert_into_user(user: User) -> User:
+def insert_into_user(user: UserToDB) -> User:
     cursor = conn.cursor()
     query = """ INSERT INTO users (
                     username,
@@ -88,9 +88,10 @@ def insert_into_user(user: User) -> User:
     user.id = cursor.lastrowid
     logger.debug(f"{cursor.lastrowid=}")
     cursor.close()
+    return user
 
 
-def get_user_by_username(username: str) -> User:
+def get_user_by_username(username: str) -> UserInDB:
     cursor = conn.cursor()
     query = """ SELECT *
                 FROM users
@@ -99,4 +100,4 @@ def get_user_by_username(username: str) -> User:
     cursor.execute(query, (username))
     user_dict = cursor.fetchone()
     cursor.close()
-    return User(**user_dict)
+    return UserInDB(**user_dict)
