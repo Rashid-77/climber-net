@@ -1,5 +1,4 @@
-
-create_user_table_query = '''
+create_user_table_query = """
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `username` CHAR(50) NOT NULL,
@@ -10,6 +9,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `city` CHAR(50) NOT NULL,
   `country` CHAR(50) NOT NULL,
   `password` VARCHAR(100) NOT NULL,
+  `disabled` BOOL NOT NULL,
   PRIMARY KEY (id)
 );
-'''
+"""

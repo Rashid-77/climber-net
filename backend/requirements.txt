@@ -3,6 +3,8 @@ uvicorn[standard]
 pymysql
 PyMySQL[rsa]
 passlib[bcrypt]
+python-jose
+python-multipart
 
 # dev
 pytest
