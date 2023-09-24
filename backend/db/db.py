@@ -83,15 +83,13 @@ def insert_into_user(user: UserToDB) -> User:
             user.disabled,
         ),
     )
-    logger.debug(f"{cursor.lastrowid=}")
     conn.commit()
     user.id = cursor.lastrowid
-    logger.debug(f"{cursor.lastrowid=}")
     cursor.close()
     return user
 
 
-def get_user_by_username(username: str) -> UserInDB:
+def get_user_by_username(username: str) -> UserInDB | None:
     cursor = conn.cursor()
     query = """ SELECT *
                 FROM users
@@ -100,4 +98,16 @@ def get_user_by_username(username: str) -> UserInDB:
     cursor.execute(query, (username))
     user_dict = cursor.fetchone()
     cursor.close()
-    return UserInDB(**user_dict)
+    return UserInDB(**user_dict) if user_dict else None
+
+
+def get_user_by_id(id: int | str) -> UserInDB | None:
+    cursor = conn.cursor()
+    query = """ SELECT *
+                FROM users
+                WHERE id=%s;
+            """
+    cursor.execute(query, (int(id)))
+    user_dict = cursor.fetchone()
+    cursor.close()
+    return UserInDB(**user_dict) if user_dict else None

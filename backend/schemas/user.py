@@ -3,6 +3,10 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class UserId(BaseModel):
+    id: Optional[int] = None
+
+
 class UserBase(BaseModel):
     username: Optional[str] = None
     first_name: str
@@ -18,13 +22,8 @@ class UserCreate(UserBase):
     password: str
 
 
-class UserToDB(UserCreate):
-    id: Optional[int] = None
+class UserToDB(UserId, UserCreate):
     disabled: bool | None = False
-
-
-class UserInDBBase(UserBase):
-    id: Optional[int] = None
 
 
 class UserInDB(UserToDB):
@@ -32,6 +31,5 @@ class UserInDB(UserToDB):
 
 
 # Additional properties to return via API
-class User(UserBase):
-    id: Optional[int] = None
+class User(UserBase, UserId):
     disabled: bool | None = False
