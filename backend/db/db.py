@@ -111,3 +111,15 @@ def get_user_by_id(id: int | str) -> UserInDB | None:
     user_dict = cursor.fetchone()
     cursor.close()
     return UserInDB(**user_dict) if user_dict else None
+
+
+def search_user(first_name: str, last_name: str) -> UserInDB | None:
+    cursor = conn.cursor()
+    query = """ SELECT *
+                FROM users
+                WHERE first_name LIKE %s AND last_name LIKE %s ;
+            """
+    cursor.execute(query, (f"%{first_name}%", f"%{last_name}%"))
+    users_dict = cursor.fetchall()
+    cursor.close()
+    return [UserInDB(**user_dict) for user_dict in users_dict]

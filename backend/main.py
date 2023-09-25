@@ -105,3 +105,11 @@ def get_user(id: int):
             status_code=status.HTTP_404_NOT_FOUND, detail="Not found"
         )
     return user
+
+
+@app.get("/user/search")
+async def read_item(first_name: str = "", last_name: str = ""):
+    print(f"{first_name=}, {last_name=}")
+    users = db.search_user(first_name, last_name)
+    print(users)
+    return users
