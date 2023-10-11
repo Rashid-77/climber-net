@@ -24,4 +24,6 @@ services:
       - .env
     restart: always
     volumes:
+      - ./db_init/conf.d:/etc/mysql/conf.d
       - ./db_backend_mysql:/var/lib/mysql
+      - ./db_init/table:/docker-entrypoint-initdb.d

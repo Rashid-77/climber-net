@@ -38,7 +38,7 @@ while not ready:
             logger.error(msg)
             raise RuntimeError(msg)
 
-create_tables(conn)
+# create_tables(conn)
 
 
 def get_dbcursor():
