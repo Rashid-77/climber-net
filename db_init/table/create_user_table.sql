@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `username` CHAR(50) NOT NULL,
   `first_name` CHAR(50) NOT NULL,
   `last_name` CHAR(50) NOT NULL,
-  `age` SMALLINT NOT NULL,
+  `birthdate` DATE,
   `bio` VARCHAR(512) NOT NULL,
   `city` CHAR(100) NOT NULL,
   `country` CHAR(100) NOT NULL,
