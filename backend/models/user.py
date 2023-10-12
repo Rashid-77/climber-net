@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `username` CHAR(50) NOT NULL,
   `first_name` CHAR(30) NOT NULL,
   `last_name` CHAR(30) NOT NULL,
-  `age` SMALLINT NOT NULL,
+  `birthday` DATE,
   `bio` VARCHAR(512) NOT NULL,
   `city` CHAR(50) NOT NULL,
   `country` CHAR(50) NOT NULL,

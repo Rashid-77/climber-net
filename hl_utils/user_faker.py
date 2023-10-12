@@ -5,7 +5,6 @@ from optparse import OptionParser
 from faker import Faker
 from passlib.context import CryptContext  # from passlib[bcrypt]
 
-FILE_DEST = "./db_init/initial_data/people"
 FILE_DEST = "../db_init/table/people"
 
 fake = Faker("ru_RU")

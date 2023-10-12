@@ -6,8 +6,6 @@ import pymysql.cursors
 from backend.log import get_logger
 from backend.schemas.user import User, UserInDB, UserToDB
 
-from .init_db import create_tables
-
 logger = get_logger(__name__)
 
 
@@ -38,8 +36,6 @@ while not ready:
             logger.error(msg)
             raise RuntimeError(msg)
 
-# create_tables(conn)
-
 
 def get_dbcursor():
     return conn
@@ -61,7 +57,7 @@ def insert_into_user(user: UserToDB) -> User:
                     username,
                     first_name,
                     last_name,
-                    age,
+                    birthday,
                     bio,
                     city,
                     country,
@@ -75,7 +71,7 @@ def insert_into_user(user: UserToDB) -> User:
             user.username,
             user.first_name,
             user.last_name,
-            user.age,
+            user.birthday,
             user.bio,
             user.city,
             user.country,
@@ -117,9 +113,10 @@ def search_user(first_name: str, last_name: str) -> UserInDB | None:
     cursor = conn.cursor()
     query = """ SELECT *
                 FROM users
-                WHERE first_name LIKE %s AND last_name LIKE %s ;
+                WHERE first_name LIKE %s AND last_name LIKE %s
+                ORDER BY id;
             """
-    cursor.execute(query, (f"%{first_name}%", f"%{last_name}%"))
+    cursor.execute(query, (f"{first_name}%", f"{last_name}%"))
     users_dict = cursor.fetchall()
     cursor.close()
     return [UserInDB(**user_dict) for user_dict in users_dict]
