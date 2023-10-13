@@ -1,7 +1,8 @@
 version: '3'
 
 services:
-  web:
+  web-3:
+    container_name: climb-net-3 
     build: 
       context: ./backend
       dockerfile: Dockerfile
@@ -15,15 +16,17 @@ services:
     depends_on:
       - db
 
-
   db:
-    image: mysql:8.0
+    # image: postgres:15.0-alpine
+    container_name: climber_db 
+    build:
+      dockerfile: Dockerfile
     ports:
-      - '3306:3306'
-    env_file: 
+      - '5432:5432'
+    restart: unless-stopped
+    env_file:
       - .env
-    restart: always
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - ./db_init/conf.d:/etc/mysql/conf.d
-      - ./db_backend_mysql:/var/lib/mysql
-      - ./db_init/table:/docker-entrypoint-initdb.d
+      - ./pg_data:/var/lib/postgresql/data/pgdata 

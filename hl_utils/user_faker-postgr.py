@@ -5,7 +5,6 @@ from optparse import OptionParser
 from faker import Faker
 from passlib.context import CryptContext  # from passlib[bcrypt]
 
-FILE_DEST = "./db_init/initial_data/people"
 FILE_DEST = "../db_init/table/people"
 
 fake = Faker("ru_RU")
@@ -68,23 +67,47 @@ def generate_fake_user_account(users):
     # so it turned off
     # hash = pwd_context.hash(pwd)     # it useless for tests now
     hash = pwd
-    return str(
-        f"INSERT INTO users (username, first_name, last_name, birthdate, "
-        f"bio, city, country, password, disabled) VALUES "
-        f"('{user}', '{fname}', '{lname}', '{bd}', "
-        f"'{bio}', '{fake.city()}', '{country}', '{hash}', 0);\n"
-    )
+
+    return  f"('{user}', '{fname}', '{lname}', '{bd}', " \
+            f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE)"
+    # return str(
+    #     f"INSERT INTO users (username, first_name, last_name, birthdate, "
+    #     f"bio, city, country, password, disabled) VALUES "
+    #     f"('{user}', '{fname}', '{lname}', '{bd}', "
+    #     f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE);\n"
+    # )
 
 
 def main(limit_peoples):
     print(f"Start generating sql for {limit_peoples} users")
     users = set()
     with open(f"{FILE_DEST}-{limit_peoples}.sql", "w", encoding="utf-8") as f:
+        f.writelines(
+            "CREATE TABLE IF NOT EXISTS users (\n"
+            "id SERIAL PRIMARY KEY,\n"
+            "username CHAR(50) NOT NULL,\n"
+            "first_name CHAR(50) NOT NULL,\n"
+            "last_name CHAR(50) NOT NULL,\n"
+            "birthdate DATE,\n"
+            "bio VARCHAR(512) NOT NULL,\n"
+            "city CHAR(100) NOT NULL,\n"
+            "country CHAR(100) NOT NULL,\n"
+            "password VARCHAR(100) NOT NULL,\n"
+            "disabled BOOL NOT NULL\n"
+            ");\n"
+        )
+        f.writelines("INSERT INTO users ("
+                     "username, first_name, last_name, birthdate, "
+                     "bio, city, country, password, disabled"
+                     ") VALUES\n")
         for n in range(limit_peoples):
             if not n % 1000:
                 print(f"{n:7}", end="\r")
             line = generate_fake_user_account(users)
-            f.writelines(line)
+            if n == limit_peoples - 1:
+                f.writelines(f'{line};\n')
+            else:
+                f.writelines(f'{line},\n')
 
     print(f"Finished. Users {len(users)}")
 
