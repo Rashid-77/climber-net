@@ -1,31 +1,55 @@
 import os
 import time
 
-import pymysql.cursors
-
 from backend.log import get_logger
 from backend.schemas.user import User, UserInDB, UserToDB
+from backend.utils.config import get_settings
 
 logger = get_logger(__name__)
-
+logger.info('db.py started')
 
 def get_connection():
-    return pymysql.connect(
-        host=os.getenv("MYSQL_HOST"),
-        port=int(os.getenv("MYSQL_PORT")),
-        database=os.getenv("MYSQL_DATABASE"),
-        user=os.getenv("MYSQL_ROOT_USER"),
-        password=os.getenv("MYSQL_ROOT_PASSWORD"),
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    logger.info('-> get_connection()')
+    # if os.getenv("DB") == 'mysql':
+    #     logger.info('mysql get_connection()')
+    #     import pymysql.cursors
+    #     return pymysql.connect(
+    #         host=os.getenv("MYSQL_HOST"),
+    #         port=int(os.getenv("MYSQL_PORT")),
+    #         database=os.getenv("MYSQL_DATABASE"),
+    #         user=os.getenv("MYSQL_ROOT_USER"),
+    #         password=os.getenv("MYSQL_ROOT_PASSWORD"),
+    #         charset="utf8mb4",
+    #         cursorclass=pymysql.cursors.DictCursor,)
+    # elif os.getenv("DB") == 'postgresql':
+    if True:
+        logger.info('postgresql get_connection()')
+        import psycopg2
+        logger.info(f'pg_url={get_settings().pg_url}')
+        return psycopg2.connect(get_settings().pg_url)
+    else:
+        raise 'Not "mysql", not "postgresql" string was defined in env var "DB"'
+        
 
+# conn = psycopg2.connect(DSN)
+
+# with conn:
+#     with conn.cursor() as curs:
+#         curs.execute(SQL1)
+
+# with conn:
+#     with conn.cursor() as curs:
+#         curs.execute(SQL2)
+
+# # leaving contexts doesn't close the connection
+# conn.close()
 
 ready = False
 retry = 60
 while not ready:
     try:
         conn = get_connection()
+        logger.info(f'{conn=}')
         ready = True
     except Exception as e:
         logger.info(f"trying to connect to bd...\n{e}")
