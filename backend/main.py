@@ -1,12 +1,14 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError
+from sqlalchemy.orm import Session
 
 from backend.db import db
 
+from .api import deps
 from .log import get_logger
 from .schemas.token import Token, TokenData
 from .schemas.user import User, UserCreate, UserToDB
@@ -75,9 +77,7 @@ async def get_current_active_user(
 
 
 @app.post("/login/", response_model=Token)
-def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-):
+def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -98,16 +98,14 @@ def login_for_access_token(
 
 
 @app.get("/user/get/{id}", response_model=User)
-def get_user(id: int):
-    user = db.get_user_by_id(id=id)
+def get_user(id: int, ses: Session = Depends(deps.get_db)):
+    user = db.get_user_by_id(id=id, db=ses)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     return user
 
 
-@app.get("/user/search")
+@app.get("/user/search", response_model=List[User])
 async def read_item(first_name: str = "", last_name: str = ""):
     users = db.search_user(first_name, last_name)
     return users

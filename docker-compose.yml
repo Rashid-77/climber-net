@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  web-3:
-    container_name: climb-net-3 
+  backend:
+    container_name: climb-net
     build: 
       context: ./backend
       dockerfile: Dockerfile
@@ -17,7 +17,6 @@ services:
       - db
 
   db:
-    # image: postgres:15.0-alpine
     container_name: climber_db 
     build:
       dockerfile: Dockerfile

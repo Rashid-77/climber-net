@@ -68,14 +68,10 @@ def generate_fake_user_account(users):
     # hash = pwd_context.hash(pwd)     # it useless for tests now
     hash = pwd
 
-    return  f"('{user}', '{fname}', '{lname}', '{bd}', " \
-            f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE)"
-    # return str(
-    #     f"INSERT INTO users (username, first_name, last_name, birthdate, "
-    #     f"bio, city, country, password, disabled) VALUES "
-    #     f"('{user}', '{fname}', '{lname}', '{bd}', "
-    #     f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE);\n"
-    # )
+    return (
+        f"('{user}', '{fname}', '{lname}', '{bd}', "
+        f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE)"
+    )
 
 
 def main(limit_peoples):
@@ -83,7 +79,7 @@ def main(limit_peoples):
     users = set()
     with open(f"{FILE_DEST}-{limit_peoples}.sql", "w", encoding="utf-8") as f:
         f.writelines(
-            "CREATE TABLE IF NOT EXISTS users (\n"
+            "CREATE TABLE IF NOT EXISTS user (\n"
             "id SERIAL PRIMARY KEY,\n"
             "username CHAR(50) NOT NULL,\n"
             "first_name CHAR(50) NOT NULL,\n"
@@ -96,18 +92,20 @@ def main(limit_peoples):
             "disabled BOOL NOT NULL\n"
             ");\n"
         )
-        f.writelines("INSERT INTO users ("
-                     "username, first_name, last_name, birthdate, "
-                     "bio, city, country, password, disabled"
-                     ") VALUES\n")
+        f.writelines(
+            "INSERT INTO user ("
+            "username, first_name, last_name, birthdate, "
+            "bio, city, country, password, disabled"
+            ") VALUES\n"
+        )
         for n in range(limit_peoples):
             if not n % 1000:
                 print(f"{n:7}", end="\r")
             line = generate_fake_user_account(users)
             if n == limit_peoples - 1:
-                f.writelines(f'{line};\n')
+                f.writelines(f"{line};\n")
             else:
-                f.writelines(f'{line},\n')
+                f.writelines(f"{line},\n")
 
     print(f"Finished. Users {len(users)}")
 

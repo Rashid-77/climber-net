@@ -68,7 +68,7 @@ def generate_fake_user_account(users):
     # hash = pwd_context.hash(pwd)     # it useless for tests now
     hash = pwd
     return str(
-        f"INSERT INTO users (username, first_name, last_name, birthdate, "
+        f"INSERT INTO user (username, first_name, last_name, birthdate, "
         f"bio, city, country, password, disabled) VALUES "
         f"('{user}', '{fname}', '{lname}', '{bd}', "
         f"'{bio}', '{fake.city()}', '{country}', '{hash}', 0);\n"
