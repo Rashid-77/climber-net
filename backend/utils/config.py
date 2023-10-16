@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    API_V1_STR: str = "/api/v1"
+
     pg_user: str = os.getenv("POSTGRES_USER", "")
     pg_pass: str = os.getenv("POSTGRES_PASSWORD", "")
     pg_host: str = os.getenv("POSTGRES_HOST", "")
@@ -16,5 +18,6 @@ class Settings(BaseSettings):
     first_superuser_password: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "")
 
 
+# TODO Make this settings a global object
 def get_settings():
     return Settings()

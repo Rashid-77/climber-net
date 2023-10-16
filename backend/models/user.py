@@ -12,5 +12,6 @@ class User(Base):
     bio = Column(String)
     city = Column(String)
     country = Column(String)
-    password = Column(String)
+    hashed_password = Column(String)
     disabled = Column(Boolean)
+    is_superuser = Column(Boolean, default=False)

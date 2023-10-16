@@ -62,15 +62,14 @@ def generate_fake_user_account(users):
     pwd = "".join(
         random.choice(string.ascii_letters + string.digits) for i in range(32)
     )
-
     # hashing takes to much time when generating millions of accounts,
-    # so it turned off
+    # so it turned off for testing stage only
     # hash = pwd_context.hash(pwd)     # it useless for tests now
     hash = pwd
 
     return (
         f"('{user}', '{fname}', '{lname}', '{bd}', "
-        f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE)"
+        f"'{bio}', '{fake.city()}', '{country}', '{hash}', FALSE, FALSE)"
     )
 
 
@@ -88,14 +87,15 @@ def main(limit_peoples):
             "bio VARCHAR(512) NOT NULL,\n"
             "city CHAR(100) NOT NULL,\n"
             "country CHAR(100) NOT NULL,\n"
-            "password VARCHAR(100) NOT NULL,\n"
-            "disabled BOOL NOT NULL\n"
+            "hashed_password VARCHAR(100) NOT NULL,\n"
+            "disabled BOOL NOT NULL,\n"
+            "is_superuser BOOL NOT NULL\n"
             ");\n"
         )
         f.writelines(
             "INSERT INTO user ("
             "username, first_name, last_name, birthdate, "
-            "bio, city, country, password, disabled"
+            "bio, city, country, hashed_password, disabled, is_superuser"
             ") VALUES\n"
         )
         for n in range(limit_peoples):
