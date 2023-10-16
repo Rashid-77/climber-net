@@ -4,6 +4,6 @@
 set -e
 
 mkdir -p 'log'
-docker-compose \
+docker compose \
 -f docker-compose.yml \
 build

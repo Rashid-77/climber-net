@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel
@@ -11,7 +12,7 @@ class UserBase(BaseModel):
     username: Optional[str] = None
     first_name: str
     last_name: str
-    age: int
+    birthdate: date
     bio: str
     city: str
     country: str
