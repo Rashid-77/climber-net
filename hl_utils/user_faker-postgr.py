@@ -80,13 +80,13 @@ def main(limit_peoples):
         f.writelines(
             'CREATE TABLE IF NOT EXISTS "user" (\n'
             "id SERIAL PRIMARY KEY,\n"
-            "username CHAR(50) NOT NULL,\n"
-            "first_name CHAR(50) NOT NULL,\n"
-            "last_name CHAR(50) NOT NULL,\n"
+            "username VARCHAR(50) NOT NULL,\n"
+            "first_name VARCHAR(50) NOT NULL,\n"
+            "last_name VARCHAR(50) NOT NULL,\n"
             "birthdate DATE,\n"
             "bio VARCHAR(512) NOT NULL,\n"
-            "city CHAR(100) NOT NULL,\n"
-            "country CHAR(100) NOT NULL,\n"
+            "city VARCHAR(100) NOT NULL,\n"
+            "country VARCHAR(100) NOT NULL,\n"
             "hashed_password VARCHAR(100) NOT NULL,\n"
             "disabled BOOL NOT NULL,\n"
             "is_superuser BOOL NOT NULL\n"
