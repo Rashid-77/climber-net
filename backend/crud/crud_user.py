@@ -23,10 +23,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             except ValueError:
                 raise HTTPException(status_code=400, detail="Incorrect value")
         q = db.execute(text('SELECT * FROM "user" WHERE id=:id;'), {"id": id})
-        r = q.fetchone()
-        if r is None:
-            raise HTTPException(status_code=404, detail="Not found")
-        return self.pack_model_user(r)
+        return q.fetchone()
 
     def get_by_username(self, db: Session, *, username: str) -> Optional[User]:
         return db.query(User).filter(User.username == username).first()
@@ -78,20 +75,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
-
-    def pack_model_user(self, row) -> User:
-        # TODO do it later by sqlalchemy
-        return User(
-            id=row[0],
-            username=row[1].strip(),
-            first_name=row[2].strip(),
-            last_name=row[3].strip(),
-            birthdate=row[4],
-            bio=row[5].strip(),
-            city=row[6].strip(),
-            country=row[7].strip(),
-            disabled=row[9],
-        )
 
 
 user = CRUDUser(User)
