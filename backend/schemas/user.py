@@ -13,7 +13,7 @@ class UserBase(BaseModel):
     bio: str
     city: str
     country: str
-    is_active: Optional[bool] = True
+    disabled: Optional[bool] = True
 
 
 # Properties to receive via API on creation
@@ -31,8 +31,8 @@ class UserUpdate(UserBase):
 class UserInDBBase(UserBase):
     id: Optional[int] = None
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
 # Additional properties to return via API
