@@ -78,7 +78,7 @@ def main(limit_peoples):
     users = set()
     with open(f"{FILE_DEST}-{limit_peoples}.sql", "w", encoding="utf-8") as f:
         f.writelines(
-            "CREATE TABLE IF NOT EXISTS user (\n"
+            'CREATE TABLE IF NOT EXISTS "user" (\n'
             "id SERIAL PRIMARY KEY,\n"
             "username CHAR(50) NOT NULL,\n"
             "first_name CHAR(50) NOT NULL,\n"
@@ -93,7 +93,7 @@ def main(limit_peoples):
             ");\n"
         )
         f.writelines(
-            "INSERT INTO user ("
+            'INSERT INTO "user" ('
             "username, first_name, last_name, birthdate, "
             "bio, city, country, hashed_password, disabled, is_superuser"
             ") VALUES\n"
