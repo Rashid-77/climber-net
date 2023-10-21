@@ -60,4 +60,3 @@ async def search_by_firstname_lastname(
     db: Session = Depends(deps.get_db),
 ):
     return search.search_user.by_first_last_names(db, first_name, last_name)
-

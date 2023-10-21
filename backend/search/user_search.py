@@ -1,13 +1,11 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Generic, Type
 
-from fastapi import HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from sqlalchemy import text, select, and_
 
-from backend import get_logger
-from backend import schemas
-from backend.models.user import User
+from backend import get_logger, schemas
 from backend.crud.base import ModelType
+from backend.models.user import User
 
 logger = get_logger(__name__)
 
@@ -23,23 +21,19 @@ class SearchUser(Generic[ModelType]):
         """
         self.model = schemas.User
 
-
-    def by_first_last_names(
-        self, 
-        db: Session, 
-        f_name: str = "", 
-        l_name: str = ""
-    ):
+    def by_first_last_names(self, db: Session, f_name: str = "", l_name: str = ""):
         query = """ SELECT *
                     FROM "user"
-                    WHERE 
-                        LOWER(first_name) LIKE :fn
+                    WHERE
+                        first_name LIKE :fn
                         AND
-                        LOWER(last_name) LIKE :ln
+                        last_name LIKE :ln
                     ORDER BY id;
                 """
-        q = db.execute(text(query), {"fn": f"{f_name}%", "ln": f"{l_name}%"})
-        return  q.fetchall()
+        q = db.execute(
+            text(query), {"fn": f"{f_name.lower()}%", "ln": f"{l_name.lower()}%"}
+        )
+        return q.fetchall()
 
 
 search_user = SearchUser(User)

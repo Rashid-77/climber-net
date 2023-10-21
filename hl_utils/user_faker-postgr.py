@@ -33,11 +33,11 @@ def generate_fake_user_account(users):
     it returns a sql comand INSERT
     """
     if random.randint(0, 1):
-        fname = fake.first_name_male()
-        lname = fake.last_name_male()
+        fname = fake.first_name_male().lower()
+        lname = fake.last_name_male().lower()
     else:
-        fname = fake.first_name_female()
-        lname = fake.last_name_female()
+        fname = fake.first_name_female().lower()
+        lname = fake.last_name_female().lower()
 
     bd = fake.date_between(start_date="-80y", end_date="-13y")
     user = fname[:2] + lname[:2]
@@ -80,13 +80,13 @@ def main(limit_peoples):
         f.writelines(
             'CREATE TABLE IF NOT EXISTS "user" (\n'
             "id SERIAL PRIMARY KEY,\n"
-            "username VARCHAR(50) NOT NULL,\n"
-            "first_name VARCHAR(50) NOT NULL,\n"
-            "last_name VARCHAR(50) NOT NULL,\n"
+            "username TEXT NOT NULL,\n"
+            "first_name TEXT NOT NULL,\n"
+            "last_name TEXT NOT NULL,\n"
             "birthdate DATE,\n"
-            "bio VARCHAR(512) NOT NULL,\n"
-            "city VARCHAR(100) NOT NULL,\n"
-            "country VARCHAR(100) NOT NULL,\n"
+            "bio TEXT NOT NULL,\n"
+            "city TEXT NOT NULL,\n"
+            "country TEXT NOT NULL,\n"
             "hashed_password VARCHAR(100) NOT NULL,\n"
             "disabled BOOL NOT NULL,\n"
             "is_superuser BOOL NOT NULL\n"
