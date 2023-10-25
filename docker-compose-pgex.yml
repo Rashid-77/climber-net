@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  backend:
+    container_name: climb-net
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+    env_file: 
+      - .env
+    volumes:
+      - .:/code
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+
+  db:
+    container_name: climber_db 
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - '5432:5432'
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data/pgdata 
+
+  postgres-exporter:
+    image: wrouesnel/postgres_exporter:v0.8.0
+    restart: always
+    environment:
+      #- DATA_SOURCE_NAME=postgresql://postgres:password@postgres-db:5432/postgres?sslmode=disable
+      - DATA_SOURCE_URI=climber_db:5432/climber-net?sslmode=disable
+      - DATA_SOURCE_USER=root
+      - DATA_SOURCE_PASS=pwd
+    ports:
+      - "9187:9187"
+    depends_on:
+      - db

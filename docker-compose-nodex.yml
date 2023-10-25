@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  backend:
+    container_name: climb-net
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+    env_file: 
+      - .env
+    volumes:
+      - .:/code
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+
+  db:
+    container_name: climber_db 
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - '5432:5432'
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data/pgdata 
+
+  node-exporter:
+    image: prom/node-exporter:v1.3.1
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude'
+      - '^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
+    depends_on:
+      - db
