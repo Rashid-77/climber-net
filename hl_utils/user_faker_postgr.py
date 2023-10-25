@@ -8,6 +8,7 @@ from passlib.context import CryptContext  # from passlib[bcrypt]
 FILE_DEST = "../db_init/table/people"
 
 fake = Faker("ru_RU")
+fake = Faker("en_US")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 bios = (
