@@ -1,19 +1,19 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # Shared properties
 class UserBase(BaseModel):
     username: Optional[str] = None
-    first_name: str
-    last_name: str
-    birthdate: date
-    bio: str
-    city: str
-    country: str
-    disabled: Optional[bool] = True
+    first_name: Optional[str] = Field(None)
+    last_name: Optional[str] = Field(None)
+    birthdate: Optional[date] = Field(None)
+    bio: Optional[str] = Field(None)
+    city: Optional[str] = Field(None)
+    country: Optional[str] = Field(None)
+    disabled: Optional[bool] = False
 
 
 # Properties to receive via API on creation

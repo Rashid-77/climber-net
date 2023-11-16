@@ -18,8 +18,7 @@ services:
 
   db:
     container_name: climber_db 
-    build:
-      dockerfile: Dockerfile
+    image: postgres:15.0-alpine
     ports:
       - '5432:5432'
     restart: unless-stopped
