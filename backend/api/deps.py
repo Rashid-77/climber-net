@@ -10,14 +10,12 @@ from backend import crud, get_logger, models
 from backend.db.session import SessionLocal
 from backend.schemas.token import TokenData
 
-# from app.core import security
 from backend.utils.config import get_settings
 from backend.utils.security import decode_access_token  # noqa
 
 logger = get_logger(__name__)
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{get_settings().API_V1_STR}/login")
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 def get_db() -> Generator:
@@ -45,8 +43,7 @@ async def get_current_user(
     except (JWTError, ValidationError):
         raise credentials_exception
 
-    user = crud.user.get(db, id=token_data.sub)
-    logger.info(f"...{user=}")
+    user = crud.user.get(db, id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
