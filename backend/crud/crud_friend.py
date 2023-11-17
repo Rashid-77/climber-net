@@ -22,7 +22,6 @@ class CRUDFriend(CRUDBase[Friend, FriendCreate, FriendUpdate]):
             user_a=obj_in.user_a,
             user_b=obj_in.user_b,
             status=obj_in.status,
-            created=datetime.now()
         )
         db.add(db_obj)
         db.commit()
