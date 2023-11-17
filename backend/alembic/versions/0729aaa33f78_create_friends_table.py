@@ -17,7 +17,7 @@ down_revision: Union[str, None] = '02b4077b8d30'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-from backend.models.friend import FriendshipStatus
+from models.friend import FriendshipStatus
 
 def upgrade() -> None:
     op.create_table(

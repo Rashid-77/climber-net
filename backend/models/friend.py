@@ -2,7 +2,7 @@ from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy import ForeignKey
 # from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend.db import Base
+from db import Base
 
 
 class FriendshipStatus():

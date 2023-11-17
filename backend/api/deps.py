@@ -6,14 +6,15 @@ from jose import JWTError
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from backend import crud, get_logger, models
-from backend.db.session import SessionLocal
-from backend.schemas.token import TokenData
+import crud, models
+from db.session import SessionLocal
+from schemas.token import TokenData
 
-from backend.utils.config import get_settings
-from backend.utils.security import decode_access_token  # noqa
+from utils.config import get_settings
+from utils.security import decode_access_token  # noqa
 
-logger = get_logger(__name__)
+# import get_logger
+# logger = get_logger(__name__)
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{get_settings().API_V1_STR}/login")
 

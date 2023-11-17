@@ -3,12 +3,13 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend import crud, get_logger, schemas, search
-from backend.api import deps
+import crud, schemas, search
+from api import deps
 
 router = APIRouter()
 
-logger = get_logger(__name__)
+# import get_logger
+# logger = get_logger(__name__)
 
 
 @router.post("/register", response_model=schemas.User)

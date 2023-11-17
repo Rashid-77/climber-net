@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.api.api_v1.endpoints import friend, login, users
+from api.api_v1.endpoints import friend, login, users
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])

@@ -6,14 +6,15 @@ from fastapi import HTTPException
 from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 
-from backend import get_logger
-from backend.crud.base import CRUDBase
-from backend.models.friend import Friend
-from backend.schemas.friend import FriendCreate, FriendUpdate
+# from backend import get_logger
+from crud.base import CRUDBase
+from models.friend import Friend
+from schemas.friend import FriendCreate, FriendUpdate
 
 from .base import ModelType
 
-logger = get_logger(__name__)
+# import get_logger
+# logger = get_logger(__name__)
 
 
 class CRUDFriend(CRUDBase[Friend, FriendCreate, FriendUpdate]):

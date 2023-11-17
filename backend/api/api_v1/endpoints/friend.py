@@ -3,14 +3,15 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend import models
-from backend import crud, get_logger, schemas
-from backend.api import deps
-from backend.schemas.friend import FriendCreate
-from backend.models.friend import FriendshipStatus
+import models
+import crud, schemas
+from api import deps
+from schemas.friend import FriendCreate
+from models.friend import FriendshipStatus
 router = APIRouter()
 
-logger = get_logger(__name__)
+# from . import get_logger
+# logger = get_logger(__name__)
 
 
 @router.post("/add/{user_id}", response_model=schemas.Friend)
