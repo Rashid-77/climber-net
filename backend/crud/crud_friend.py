@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+import select
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import HTTPException
-from sqlalchemy import text
+from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 
 from backend import get_logger
@@ -27,6 +28,21 @@ class CRUDFriend(CRUDBase[Friend, FriendCreate, FriendUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def remove(self, db: Session, user_id, friend_id) -> List[Friend]:
+        q1 = db.query(self.model)\
+            .filter(
+                and_(self.model.user_a == user_id, self.model.user_b == friend_id)
+            )
+        q2 = db.query(self.model) \
+            .filter(
+                and_(self.model.user_a == friend_id, self.model.user_b == user_id)
+            )
+        fr_ids = q1.union(q2).all()
+        for q in fr_ids:
+            db.delete(q)
+        db.commit()
+        return fr_ids
 
 
 friend = CRUDFriend(Friend)

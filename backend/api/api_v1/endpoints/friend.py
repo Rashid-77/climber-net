@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -46,18 +46,20 @@ def add_friend(
     return friend
 
 
-@router.delete("/delete/{user_id}", response_model=schemas.User)
+@router.delete("/delete/{user_id}", response_model=List[schemas.Friend])
 def delete_friend_by_id(
-    user_id: int,
+    friend_id: int,
     *,
-    # current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_active_user),
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     Delete friend by id.
     """
-    user = crud.user.get(db, id=user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    # TODO delete from friends table
-    return user
+    friend = crud.friend.remove(db, user_id=current_user.id, friend_id=friend_id)
+    if not len(friend):
+        raise HTTPException(
+            status_code=404,
+            detail="Friend not found.",
+        )
+    return friend
