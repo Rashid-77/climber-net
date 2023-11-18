@@ -27,6 +27,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("wall_user_id", sa.Integer(), nullable=False),
+        sa.Column("username", sa.String(), nullable=True),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("privacy", sa.Integer(), default=PostPrivacy.PUBLIC, nullable=False),
         sa.Column("comments_count", sa.Integer(), server_default="0", nullable=False),
