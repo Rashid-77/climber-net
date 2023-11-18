@@ -26,6 +26,7 @@ class Post(Base):
         default=None
         )
     wall_user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    username = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     privacy = Column(Integer, nullable=False, default=PostPrivacy.PUBLIC)
     comments_count = Column(Integer, server_default="0", nullable=False)
