@@ -3,7 +3,7 @@
 # Exit in case of error
 set -e
 
-mkdir -p 'log'
+mkdir -p 'backend/log'
 docker compose \
--f docker-compose.yml \
+-f backend/docker-compose.yml \
 build

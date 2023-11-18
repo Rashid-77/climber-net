@@ -41,4 +41,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index(op.f("ix_user_username"), table_name="user")
     op.drop_index(op.f("ix_user_id"), table_name="user")
-    op.drop_table
+    op.drop_table("user")

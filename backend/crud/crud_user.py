@@ -4,16 +4,16 @@ from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from backend import get_logger
-from backend.crud.base import CRUDBase
-from backend.models.user import User
-from backend.schemas.user import UserCreate, UserUpdate
-from backend.utils.security import get_password_hash, verify_password
+# from backend import get_logger
+from crud.base import CRUDBase
+from models.user import User
+from schemas.user import UserCreate, UserUpdate
+from utils.security import get_password_hash, verify_password
 
 from .base import ModelType
 
-logger = get_logger(__name__)
-
+# import get_logger
+# logger = get_logger(__name__)
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get(self, db: Session, id: Any) -> Optional[ModelType]:

@@ -3,11 +3,12 @@ from typing import Generic, Type
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from backend import get_logger, schemas
-from backend.crud.base import ModelType
-from backend.models.user import User
+import schemas
+from crud.base import ModelType
+from models.user import User
 
-logger = get_logger(__name__)
+# import get_logger
+# logger = get_logger(__name__)
 
 
 class SearchUser(Generic[ModelType]):
