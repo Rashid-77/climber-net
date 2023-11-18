@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column("user_a", sa.Integer(), sa.ForeignKey("user.id", ondelete="CASCADE"), nullable=True),
         sa.Column("user_b", sa.Integer(), sa.ForeignKey("user.id", ondelete="CASCADE"), nullable=True),
         sa.Column("status", sa.Integer(), nullable=False, default=FriendshipStatus.UNPROCESSED),
-        sa.Column("created", sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+        sa.Column("created", sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_friend_id"), "friend", ["id"], unique=False)
