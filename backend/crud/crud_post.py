@@ -1,20 +1,17 @@
+from datetime import datetime
 from typing import List
-from sqlalchemy import desc
-from sqlalchemy.orm import Session
 
 from .base import ModelType
 from crud.base import CRUDBase
 from models.user import User
-from models.post import PostPrivacy
 from models.post import Post
-from schemas.post import PostCreate, PostCreateRead
+from schemas.post import PostCreate, PostUpdate
 from services.friend import friend_srv
-from utils.log import get_logger
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
-logger = get_logger(__name__)
 
-
-class CRUDPost(CRUDBase[Post, PostCreate, PostCreateRead]):
+class CRUDPost(CRUDBase[Post, PostCreate, PostUpdate]):
     def create(self, db: Session, *, obj_in: PostCreate, current_user: User) -> Post:
         obj_in.wall_user_id = obj_in.wall_user_id or current_user.id
         db_obj = Post(
@@ -46,6 +43,10 @@ class CRUDPost(CRUDBase[Post, PostCreate, PostCreateRead]):
                 .limit(limit) \
                 .offset(offset) \
                 .all()
+
+    def update(self, db: Session, *, db_obj: Post, obj_in: PostUpdate) -> Post:
+        db_obj.updated_at = datetime.now()
+        return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
 
 post = CRUDPost(Post)

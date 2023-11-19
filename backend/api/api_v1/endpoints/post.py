@@ -10,14 +10,11 @@ from api.deps import get_db, get_current_active_user
 
 router = APIRouter()
 
-# from . import get_logger
-# logger = get_logger(__name__)
-
 
 @router.post(
         "/create/", 
         status_code=status.HTTP_201_CREATED, 
-        response_model=schemas.post.PostRead)
+        response_model=schemas.PostRead)
 def create_post(
     post_in: schemas.PostCreate,
     *,
@@ -51,3 +48,74 @@ def feed_posts(
     Get friend's posts
     """
     return crud.post.feed_my_friends_post(db, current_user, offset=offset, limit=limit)
+
+
+@router.get("/{post_id}", response_model=schemas.PostRead)
+def get_post(
+    post_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get post by id
+    """
+    post = crud.post.get(db, post_id)
+    if not post:
+            raise HTTPException(
+                status_code=404,
+                detail="Post not found.",
+            )
+    if post.wall_user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission.",
+        )
+    return post
+
+
+@router.put("/{post_id}", response_model=schemas.PostRead)
+def update_post(
+    post_id: int,
+    post_in: schemas.PostUpdate,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Update post by id
+    """
+    post = crud.post.get(db, post_id)
+    if not post:
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found.",
+        )
+    if post.wall_user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission.",
+        )
+    return crud.post.update(db, db_obj=post, obj_in=post_in)
+
+
+@router.delete("/{post_id}", response_model=schemas.PostRead)
+def delete_posts(
+    post_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get post by id
+    """
+    post = crud.post.get(db, post_id)
+    if not post:
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found.",
+        )
+    if post.wall_user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission.",
+        )
+    post = crud.post.remove(db, id=post_id)
+    return post

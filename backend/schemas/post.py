@@ -25,3 +25,7 @@ class PostCreateRead(BaseModel):
 
 class PostRead(PostCreateRead):
     username: str
+
+class PostUpdate(BaseModel):
+    content: str = Field(min_length=1, max_length=4096)
+    privacy: int# = PostPrivacy.PUBLIC
