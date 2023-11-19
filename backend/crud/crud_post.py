@@ -1,17 +1,14 @@
 from typing import List
-from sqlalchemy import literal, and_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-import crud
-
+from .base import ModelType
+from crud.base import CRUDBase
 from models.user import User
 from models.post import PostPrivacy
-from crud.base import CRUDBase
 from models.post import Post
 from schemas.post import PostCreate, PostCreateRead
 from services.friend import friend_srv
-from .base import ModelType
-
 from utils.log import get_logger
 
 logger = get_logger(__name__)
@@ -32,9 +29,23 @@ class CRUDPost(CRUDBase[Post, PostCreate, PostCreateRead]):
         db.refresh(db_obj)
         return db_obj
 
-    def feed_my_friends_post(self, db: Session, user: User, offset: int = 0, limit: int = 10) -> List[ModelType]:
+    def feed_my_friends_post(
+            self, 
+            db: Session, 
+            user: User, 
+            offset: int = 0, 
+            limit: int = 10
+        ) -> List[ModelType]:
         friends = friend_srv.get_my_friends(db, user.id)
-        return db.query(Post).filter(Post.wall_user_id.in_(friends)).all()
+        offset = offset if offset >= 0 else 0
+        limit = limit if limit >= 0 else 0
+        return db.query(Post) \
+                .filter(Post.wall_user_id.in_(friends)) \
+                .group_by(Post.id, Post.created_at) \
+                .order_by(desc(Post.created_at)) \
+                .limit(limit) \
+                .offset(offset) \
+                .all()
 
 
 post = CRUDPost(Post)
