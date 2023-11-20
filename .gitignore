@@ -158,6 +158,7 @@ profile*.json
 db_backend_mysql/
 db_test_backend_mysql/
 pg_data
+dump.rdb
 
 tests/
 test-local.sh
