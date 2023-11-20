@@ -1,3 +1,5 @@
+import json
+
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -7,6 +9,7 @@ import models
 import crud
 import schemas
 from api.deps import get_db, get_current_active_user
+from cache.post import post_cache
 
 router = APIRouter()
 
@@ -51,7 +54,7 @@ def feed_posts(
 
 
 @router.get("/{post_id}", response_model=schemas.PostRead)
-def get_post(
+async def get_post(
     post_id: int,
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -59,7 +62,12 @@ def get_post(
     """
     Get post by id
     """
-    post = crud.post.get(db, post_id)
+    post = await post_cache.get_post(post_id)
+    if not post:
+        post = crud.post.get(db, post_id)
+        if post:
+            await post_cache.set_post(post)
+
     if not post:
             raise HTTPException(
                 status_code=404,
