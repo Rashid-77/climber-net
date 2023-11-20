@@ -8,6 +8,7 @@ import crud, schemas
 from api import deps
 from schemas.friend import FriendCreate
 from models.friend import FriendshipStatus
+from services.friend import friend_srv
 router = APIRouter()
 
 # from . import get_logger
@@ -35,12 +36,16 @@ def add_friend(
             status_code=404,
             detail="User not found.",
         )
-    
+    if friend_srv.is_friend(db, user_id, current_user.id):
+        raise HTTPException(
+            status_code=422,
+            detail="User is friend allready.",
+        )
     friend = crud.friend.create(
         db, 
         obj_in=FriendCreate(
-            user_a=current_user.id, 
-            user_b=user_id, 
+            user_a=min(user_id, current_user.id), 
+            user_b=max(user_id, current_user.id), 
             status=FriendshipStatus.ACCEPTED
             )
         )
