@@ -1,6 +1,7 @@
 import hashlib
 import json
 
+from aioredis import Redis
 from typing import Any
 from functools import wraps
 
@@ -11,6 +12,11 @@ from utils.config import get_settings
 
 
 logger = get_logger(__name__)
+
+
+def get_redis(host, port):
+    return Redis(host=host, port=port, decode_responses=True)
+
 
 def fail_silently(default: Any = None):
     """Cache shouldn't make requests fail if cache backend is unavailable 

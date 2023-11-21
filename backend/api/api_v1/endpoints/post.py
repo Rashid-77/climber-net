@@ -1,6 +1,7 @@
 import json
 
 from typing import Any, List, Optional
+from venv import logger
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -10,6 +11,8 @@ import crud
 import schemas
 from api.deps import get_db, get_current_active_user
 from cache.post import post_cache
+from services.post import post_srv
+from services.friend import friend_srv
 
 router = APIRouter()
 
@@ -18,7 +21,7 @@ router = APIRouter()
         "/create/", 
         status_code=status.HTTP_201_CREATED, 
         response_model=schemas.PostRead)
-def create_post(
+async def create_post(
     post_in: schemas.PostCreate,
     *,
     db: Session = Depends(get_db),
@@ -36,7 +39,7 @@ def create_post(
                 status_code=404,
                 detail="User not found.",
             )
-    return crud.post.create(db, obj_in=post_in, current_user=current_user)
+    return await post_srv.save_post(db, user=current_user, post_in=post_in)
 
 
 @router.post("/feed/", response_model=List[schemas.PostRead])
@@ -50,7 +53,21 @@ def feed_posts(
     """
     Get friend's posts
     """
-    return crud.post.feed_my_friends_post(db, current_user, offset=offset, limit=limit)
+    # get post feed from db in one query
+    # return crud.post.feed_my_friends_post(db, current_user, offset=offset, limit=limit)
+    raise "New feed not implemented yet !!!"
+    friends_ids = friend_srv.get_my_friends(db, current_user.id)
+    tops = friend_srv.get_top_popular_users(db)
+    
+    for fr in friends_ids:
+        try:
+            tops.remove(fr)
+            # read from cache
+
+        except ValueError:
+            #read from db
+            pass
+
 
 
 @router.get("/{post_id}", response_model=schemas.PostRead)
@@ -62,12 +79,7 @@ async def get_post(
     """
     Get post by id
     """
-    post = await post_cache.get_post(post_id)
-    if not post:
-        post = crud.post.get(db, post_id)
-        if post:
-            await post_cache.set_post(post)
-
+    post = post_srv.load_post(db, post_id)
     if not post:
             raise HTTPException(
                 status_code=404,
