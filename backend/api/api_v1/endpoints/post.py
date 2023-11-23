@@ -1,3 +1,5 @@
+import json
+
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -7,6 +9,11 @@ import models
 import crud
 import schemas
 from api.deps import get_db, get_current_active_user
+from cache.post import post_cache
+from services.post import post_srv
+from services.friend import friend_srv
+from utils.log import get_logger
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -15,7 +22,7 @@ router = APIRouter()
         "/create/", 
         status_code=status.HTTP_201_CREATED, 
         response_model=schemas.PostRead)
-def create_post(
+async def create_post(
     post_in: schemas.PostCreate,
     *,
     db: Session = Depends(get_db),
@@ -33,12 +40,11 @@ def create_post(
                 status_code=404,
                 detail="User not found.",
             )
-    return crud.post.create(db, obj_in=post_in, current_user=current_user)
+    return await post_srv.save_post(db, user=current_user, post_in=post_in)
 
 
 @router.post("/feed/", response_model=List[schemas.PostRead])
-def feed_posts(
-    *,
+async def feed_posts(
     offset: Optional[int] = Query(0, ge=0),
     limit: Optional[int] = Query(10, ge=1, le=20),
     current_user: models.User = Depends(get_current_active_user),
@@ -47,11 +53,16 @@ def feed_posts(
     """
     Get friend's posts
     """
-    return crud.post.feed_my_friends_post(db, current_user, offset=offset, limit=limit)
+    logger.info('--------------------')
+    logger.info("feed_posts()")
+    # get post feed from db in one query
+    # return crud.post.feed_my_friends_post(db, current_user, offset=offset, limit=limit)
+    posts = await post_srv.feed_friends_posts(db, current_user)
+    return posts[offset:offset+limit]
 
 
 @router.get("/{post_id}", response_model=schemas.PostRead)
-def get_post(
+async def get_post(
     post_id: int,
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -59,7 +70,7 @@ def get_post(
     """
     Get post by id
     """
-    post = crud.post.get(db, post_id)
+    post = await post_srv.load_post(db, post_id)
     if not post:
             raise HTTPException(
                 status_code=404,

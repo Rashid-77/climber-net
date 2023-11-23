@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     first_superuser: EmailStr = os.getenv("FIRST_SUPERUSER", "")
     first_superuser_password: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "")
 
+    prod: str = os.getenv("PROD", "")
+
+    redis_host: str = os.getenv("REDIS_HOST", "")
+    redis_port: str = os.getenv("REDIS_PORT", "")
+
 
 # TODO Make this settings a global object
 def get_settings():

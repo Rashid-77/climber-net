@@ -9,5 +9,6 @@ pydantic[email]
 tenacity
 alembic
 sqlalchemy>=2.0
+aioredis
 # dev
 pytest
