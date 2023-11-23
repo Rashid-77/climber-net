@@ -3,8 +3,11 @@ from typing import List
 from sqlalchemy import and_, or_, text
 from sqlalchemy.orm import Session
 
+from cache.friend import friend_cache
 from models.friend import Friend
 
+from utils.log import get_logger
+logger = get_logger(__name__)
 
 class FriendService:
     def is_friend(self, db: Session, user_a_id, user_b_id) -> bool:
@@ -24,8 +27,10 @@ class FriendService:
         fr_ids = q1.union(q2).all()
         return [i.user_b if i.user_a == user_id else i.user_a for i in fr_ids]
 
-    def get_top_popular_users(self, db: Session) -> List:
-        # TODO cache it later
+    async def get_top_popular_users(self, db: Session) -> List:
+        top_users: str = await friend_cache.get_popular_users()
+        if top_users:
+            return top_users
         stmt = '''
                 SELECT 
                     COALESCE(t1.user_a, t2.user_b) AS usr, 
@@ -37,7 +42,9 @@ class FriendService:
                 ON t1.user_a = t2.user_b
                 ORDER BY cnt DESC;
                 '''
-        res = [r for r in db.execute(text(stmt))]
-        return res
+        top_users = [r[0] for r in db.execute(text(stmt)) if r[1] > 0]
+        logger.info(f'{top_users=}')
+        await friend_cache.set_popular_users(top_users)
+        return top_users
 
 friend_srv = FriendService()

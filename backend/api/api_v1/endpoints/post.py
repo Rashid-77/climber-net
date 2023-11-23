@@ -1,7 +1,6 @@
 import json
 
 from typing import Any, List, Optional
-from venv import logger
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -13,6 +12,8 @@ from api.deps import get_db, get_current_active_user
 from cache.post import post_cache
 from services.post import post_srv
 from services.friend import friend_srv
+from utils.log import get_logger
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -43,8 +44,7 @@ async def create_post(
 
 
 @router.post("/feed/", response_model=List[schemas.PostRead])
-def feed_posts(
-    *,
+async def feed_posts(
     offset: Optional[int] = Query(0, ge=0),
     limit: Optional[int] = Query(10, ge=1, le=20),
     current_user: models.User = Depends(get_current_active_user),
@@ -53,21 +53,12 @@ def feed_posts(
     """
     Get friend's posts
     """
+    logger.info('--------------------')
+    logger.info("feed_posts()")
     # get post feed from db in one query
     # return crud.post.feed_my_friends_post(db, current_user, offset=offset, limit=limit)
-    raise "New feed not implemented yet !!!"
-    friends_ids = friend_srv.get_my_friends(db, current_user.id)
-    tops = friend_srv.get_top_popular_users(db)
-    
-    for fr in friends_ids:
-        try:
-            tops.remove(fr)
-            # read from cache
-
-        except ValueError:
-            #read from db
-            pass
-
+    posts = await post_srv.feed_friends_posts(db, current_user)
+    return posts[offset:offset+limit]
 
 
 @router.get("/{post_id}", response_model=schemas.PostRead)
@@ -79,7 +70,7 @@ async def get_post(
     """
     Get post by id
     """
-    post = post_srv.load_post(db, post_id)
+    post = await post_srv.load_post(db, post_id)
     if not post:
             raise HTTPException(
                 status_code=404,

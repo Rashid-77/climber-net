@@ -8,7 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from cache.cache import get_redis, fail_silently, hash_cache_key
 from models import Post
 from utils.config import get_settings
-from utils.converters import map_to
+from utils.converters import map_to, strlist_to_list
 from utils.log import get_logger
 
 
@@ -16,29 +16,32 @@ logger = get_logger(__name__)
 
 
 class PostCache(Redis):
-    POSTS_EX: int = int(dt.timedelta(minutes=60).total_seconds())
+    POSTS_EX: int = int(dt.timedelta(minutes=1).total_seconds())
+    POSTS_POP_EX: int = int(dt.timedelta(minutes=60).total_seconds())
     POSTS_IDS_EX: int = int(dt.timedelta(minutes=60*24).total_seconds())
 
     def __init__(self, host, port):
-        logger.info(f'{host=}, {port=}')
         self._cache = get_redis(host=host, port=port)
-
+    
+    # single post section
     @fail_silently()
     async def get_post(self, post_id: int) -> Optional[Post]:
+        logger.info('post_cache.get_post()')
         cached_post = await self._cache.get(f"posts:{post_id}")
         logger.info(f'{cached_post=}, {type(cached_post)=}')
         return cached_post and map_to(cached_post, Post)
 
     @fail_silently()
-    async def set_post(self, post: Post) -> None:
+    async def set_post(self, post: Post, expire: int) -> None:
         await self._cache.set(f"posts:{post.id}",
                               json.dumps(jsonable_encoder(post)),
-                              ex=PostCache.POSTS_EX)
+                              ex=expire)
 
     @fail_silently()
     async def unset_post(self, post_id: int) -> None:
         await self._cache.delete(f"posts:{post_id}")
-
+    
+    # user section
     @fail_silently()
     async def set_posts_ids(self, user_id: int, ids: tuple) -> None:
         await self._cache.set(f"user:{user_id}", 
@@ -48,13 +51,13 @@ class PostCache(Redis):
     @fail_silently()
     async def get_posts_ids(self, user_id: int) -> list:
         ids = await self._cache.get(f"user:{user_id}")
-        ids = ids[1:-1].split(',')
-        return ids #and map_to(ids, List)
+        return strlist_to_list(ids)
 
     @fail_silently()
     async def unset_posts_ids(self, user_id: int) -> None:
         await self._cache.delete(f"user:{user_id}")
 
+    # milti post section
     @fail_silently()
     async def set_posts(
             self,

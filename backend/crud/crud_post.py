@@ -33,6 +33,7 @@ class CRUDPost(CRUDBase[Post, PostCreate, PostUpdate]):
             offset: int = 0, 
             limit: int = 10
         ) -> List[ModelType]:
+        ''' Get friend's posts of given user '''
         friends = friend_srv.get_my_friends(db, user.id)
         offset = offset if offset >= 0 else 0
         limit = limit if limit >= 0 else 0
@@ -43,6 +44,22 @@ class CRUDPost(CRUDBase[Post, PostCreate, PostUpdate]):
                 .limit(limit) \
                 .offset(offset) \
                 .all()
+
+    def get_posts(self,
+            db: Session, 
+            user_id: int, 
+            offset: int = 0, 
+            limit: int = 10
+        ) -> List[ModelType]:
+        ''' Get user's post. The first post in the list is the latest '''
+        return db.query(Post) \
+                .filter(Post.wall_user_id == user_id) \
+                .group_by(Post.id, Post.created_at) \
+                .order_by(desc(Post.created_at)) \
+                .limit(limit) \
+                .offset(offset) \
+                .all()
+
 
     def update(self, db: Session, *, db_obj: Post, obj_in: PostUpdate) -> Post:
         db_obj.updated_at = datetime.now()
