@@ -17,8 +17,9 @@ logger = get_logger(__name__)
 
 class PostCache(Redis):
     POSTS_EX: int = int(dt.timedelta(minutes=1).total_seconds())
-    POSTS_POP_EX: int = int(dt.timedelta(minutes=60).total_seconds())
-    POSTS_IDS_EX: int = int(dt.timedelta(minutes=60*24).total_seconds())
+    POSTS_POP_EX: int = int(dt.timedelta(minutes=1).total_seconds())
+    POSTS_IDS_EX: int = int(dt.timedelta(minutes=1).total_seconds())
+    # POSTS_IDS_EX: int = int(dt.timedelta(minutes=60*24).total_seconds())
 
     def __init__(self, host, port):
         self._cache = get_redis(host=host, port=port)
@@ -26,9 +27,7 @@ class PostCache(Redis):
     # single post section
     @fail_silently()
     async def get_post(self, post_id: int) -> Optional[Post]:
-        logger.info('post_cache.get_post()')
         cached_post = await self._cache.get(f"posts:{post_id}")
-        logger.info(f'{cached_post=}, {type(cached_post)=}')
         return cached_post and map_to(cached_post, Post)
 
     @fail_silently()
