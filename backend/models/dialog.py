@@ -4,8 +4,9 @@ from sqlalchemy.sql import func
 from db import Base
 
 
-class Dialog(Base):
+class DialogMessage(Base):
     id = Column(Integer, primary_key=True)
+    dialog_id = Column(Integer, ForeignKey("dialog.id", ondelete="CASCADE"))
     from_user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     to_user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     content = Column(String, nullable=True)
@@ -25,3 +26,9 @@ class Dialog(Base):
         index=True, 
         default=None
         )
+
+class Dialog(Base):
+    id = Column(Integer, primary_key=True)
+    user_a = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    user_b = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    created = Column(DateTime, default=func.now())

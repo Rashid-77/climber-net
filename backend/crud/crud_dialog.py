@@ -3,22 +3,24 @@ from typing import List
 from .base import ModelType
 from crud.base import CRUDBase
 from models.user import User
-from models.dialog import Dialog
-from schemas.dialog import DialogCreate, DialogRead, DialogUpdate
+from models.dialog import Dialog, DialogMessage
+from schemas.dialog import DialogMsgCreate, DialogMsgUpdate
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from utils.log import get_logger
 logger = get_logger(__name__)
 
-class CRUDDialog(CRUDBase[Dialog, DialogCreate, DialogUpdate]):
+class CRUDDialog(CRUDBase[DialogMessage, DialogMsgCreate, DialogMsgUpdate]):
     def create(self, 
-               db: Session, 
-               obj_in: DialogCreate, 
+               db: Session,
+               dialog: Dialog,
+               obj_in: DialogMsgCreate, 
                to_user: User, 
-               current_user: User
+               from_user: User
         ) -> Dialog:
-        db_obj = Dialog(
-            from_user_id = current_user.id,
+        db_obj = DialogMessage(
+            dialog_id = dialog.id,
+            from_user_id = from_user.id,
             to_user_id = to_user.id,
             content = obj_in.content,
         )
