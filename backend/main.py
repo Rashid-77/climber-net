@@ -1,20 +1,25 @@
-from contextlib import asynccontextmanager
+from contextlib import contextmanager
 
 from fastapi import FastAPI, Depends
 
 from api.api_v1.api import api_router
 from api.deps import get_db
 from services.post import post_srv
+from services.dialog import dialog_srv
 from utils import get_settings
 from utils.log import get_logger
 
 logger = get_logger(__name__)
 
 
-@asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f'start App')
-    post_srv.warming_up_post_cache(db = Depends(get_db))
+    with contextmanager(get_db)() as db:
+        await post_srv.warming_up_post_cache(db=db)
+        logger.info(f'posts warmed up')
+        await dialog_srv.warmup_dialogs(db=db)
+        logger.info(f'dialogs warmed up')
+        
     yield
     logger.info(f'stop App')
 

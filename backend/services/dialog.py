@@ -79,9 +79,7 @@ class DialogService:
 
     async def warmup_dialogs(self, db: Session):
         tops = dialog_srv.get_top_dialogs(db)
-
         for d in [top for top in tops]:
-            await dialog_cache.unset_dialog_msg(d.id)
             cache_len = await dialog_cache.len_dialog_msg(d.id)
             dialog_msgs = crud.dialog_msg.get_dialog_list(db, 
                                            user_a=d.user_a, 
