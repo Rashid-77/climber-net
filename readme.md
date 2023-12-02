@@ -60,13 +60,13 @@ Run containers:
 
     SELECT create_reference_table('user');
 
-4. create distributed table from "dialog" table:
+4. create distributed table from "dialogmessage" table:
 
-    SELECT create_distributed_table('dialog', 'id');
+    SELECT create_distributed_table('dialogmessage', 'id');
 
 5. You can change the number of shards. Default is 32 shards.
 
-    SELECT alter_distributed_table('dialog', shard_count:=6 cascade_to_colocated:=true);
+    SELECT alter_distributed_table('dialogmessage', shard_count:=6 cascade_to_colocated:=true);
 
 **If you need to increase the number of workers**
 
