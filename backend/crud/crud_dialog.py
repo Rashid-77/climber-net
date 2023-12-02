@@ -1,57 +1,40 @@
 from typing import List
 
-# from .base import ModelType
+from sqlalchemy import text, and_
+from sqlalchemy.orm import Session
+
 from crud.base import CRUDBase
 from models.user import User
-from models.dialog import Dialog, DialogMessage
-from schemas.dialog import DialogMsgCreate, DialogMsgUpdate
-from sqlalchemy.orm import Session
-from sqlalchemy import text, select
+from models.dialog import Dialog
+from schemas.dialog import DialogInfoCreate, DialogInfoFull
+
 from utils.log import get_logger
 logger = get_logger(__name__)
 
 
-class CRUDDialog(CRUDBase[DialogMessage, DialogMsgCreate, DialogMsgUpdate]):
-    def create(self, 
-               db: Session,
-               dialog: Dialog,
-               obj_in: DialogMsgCreate, 
-               to_user: User, 
-               from_user: User
-        ) -> DialogMessage:
-        db_obj = DialogMessage(
-            dialog_id = dialog.id,
-            from_user_id = from_user.id,
-            to_user_id = to_user.id,
-            content = obj_in.content,
-        )
+class CRUDDialog(CRUDBase[Dialog, DialogInfoCreate, DialogInfoFull]):
+    def create(self, db: Session, user_a: int, user_b: int) -> Dialog:
+        db_obj = Dialog(user_a=min(user_a, user_b), 
+                        user_b=max(user_a, user_b))
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def get_dialog_list(self, 
-                        db: Session, 
-                        user_a: int, 
-                        user_b: int,
-                        limit: int = 100,
-                        offset: int = 0
-                        ) -> List[DialogMessage]:
-        ''' Get messages between two users '''
-        stmt = '''
-            SELECT * FROM dialogmessage
-            WHERE (from_user_id=:a and to_user_id=:b)
-            UNION
-            SELECT * FROM dialogmessage
-            WHERE (from_user_id=:b and to_user_id=:a)
-            ORDER BY id DESC
-            LIMIT :lim
-            OFFSET :offs;
-            '''
-        dialog_list = db.scalars(select(DialogMessage).from_statement(
-            text(stmt)).params({'a':user_a, 'b':user_b, 'lim': limit, 'offs': offset})).all()
-        return dialog_list
+    def get(self, db: Session, user_a: int, user_b: int) -> DialogInfoFull:
+        a = min(user_a, user_b)
+        b = max(user_a, user_b)
+        return db.query(Dialog) \
+                    .filter(and_(Dialog.user_a == a, 
+                                 Dialog.user_b == b)).first()
 
+    def get_multi(self, 
+                  db: Session, 
+                  skip: int = 0, 
+                  limit: int = 100
+                  ) -> List[DialogInfoFull]:
+        return super().get_multi(db, skip=skip, limit=limit)
+    
     def get_dialog_info(self, db: Session, id: int) -> Dialog:
         ''' Get info on dialog between two users. Users's id, dialog creating date '''
         return db.execute(text("SELECT * FROM dialog WHERE id=:id;"), {'id':id}).first()

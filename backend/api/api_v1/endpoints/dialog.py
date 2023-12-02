@@ -38,10 +38,10 @@ async def create_dialog_msg(
             status_code=422,
             detail="User can't write to yourself.",
         )
-    return await dialog_srv.save_dialog_msg_list(db, 
-                                                 to_user=user, 
-                                                 from_user=current_user, 
-                                                 msg_in=dialog_in)
+    return await dialog_srv.save_dialog_msg(db, 
+                                            to_user=user, 
+                                            from_user=current_user, 
+                                            msg_in=dialog_in)
 
 
 @router.get("/{user_id}/list/", response_model=List[schemas.DialogMsgRead])
@@ -60,6 +60,16 @@ async def list_dialog(
         raise HTTPException(
             status_code=404,
             detail="User not found.",
+        )
+    if user_id == current_user.id:
+        raise HTTPException(
+            status_code=422,
+            detail="User can't write to yourself.",
+        )
+    if crud.dialog.get(db, user_a=user_id, user_b=current_user.id) is None:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission.",
         )
     res = await dialog_srv.load_dialog_msg_list(
         db, 
