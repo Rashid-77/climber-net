@@ -10,6 +10,7 @@ class DialogMsgCreate(BaseModel):
 
 
 class DialogMsgRead(DialogMsgCreate):
+    id: int
     dialog_id: int
     from_user_id: int
     to_user_id: int
@@ -17,3 +18,15 @@ class DialogMsgRead(DialogMsgCreate):
 
 class DialogMsgUpdate(DialogMsgCreate):
     user_id: int
+
+
+class DialogInfoBase(BaseModel):
+    id: int
+    user_a: int
+    user_b: int
+
+class DialogInfoStat(DialogInfoBase):
+    cnt_msg: int
+
+class DialogInfoFull(DialogInfoStat):
+    created: dt.datetime

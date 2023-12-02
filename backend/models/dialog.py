@@ -28,6 +28,7 @@ class DialogMessage(Base):
         )
 
 class Dialog(Base):
+    ''' Auxulary table. It is designed to reduce the load on the DialogMessage'''
     id = Column(Integer, primary_key=True)
     user_a = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user_b = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))

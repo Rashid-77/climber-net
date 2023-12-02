@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 import models
@@ -38,23 +38,33 @@ async def create_dialog_msg(
             status_code=422,
             detail="User can't write to yourself.",
         )
-    return await dialog_srv.save_dialog(db, to_user=user, from_user=current_user, msg_in=dialog_in)
+    return await dialog_srv.save_dialog_msg_list(db, 
+                                                 to_user=user, 
+                                                 from_user=current_user, 
+                                                 msg_in=dialog_in)
 
 
 @router.get("/{user_id}/list/", response_model=List[schemas.DialogMsgRead])
 async def list_dialog(
     user_id: int,
+    offset: Optional[int] = Query(0, ge=0),
+    limit: Optional[int] = Query(10, ge=1, le=20),
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ) -> Any:
     """
     Get dialog of the current_user with user_id
     """
-    user = crud.user.get(db, id=user_id)
+    user: models.User = crud.user.get(db, id=user_id)
     if not user:
         raise HTTPException(
             status_code=404,
             detail="User not found.",
         )
-    return crud.dialog.get_dialog_list(db, from_user=current_user, to_user=user)
-
+    res = await dialog_srv.load_dialog_msg_list(
+        db, 
+        user_a=current_user, 
+        user_b=user, 
+        limit=limit, 
+        offset=offset)
+    return res

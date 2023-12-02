@@ -1,14 +1,14 @@
 import datetime as dt
 import json
-from typing import List, Optional
+from typing import List
 
 from aioredis import Redis
 from fastapi.encoders import jsonable_encoder
 
-from cache.cache import get_redis, fail_silently, hash_cache_key
-from models import Dialog
+from cache.cache import get_redis, fail_silently
+from models import Dialog, DialogMessage
 from utils.config import get_settings
-from utils.converters import map_to, strlist_to_list
+from utils.converters import map_to
 from utils.log import get_logger
 
 
@@ -22,20 +22,40 @@ class DialogCache(Redis):
     def __init__(self, host, port):
         self._cache = get_redis(host=host, port=port)
     
-    # single post section
     @fail_silently()
-    async def get_dialog(self, id: int) -> Optional[Dialog]:
-        cached = await self._cache.get(f"dialog:{id}")
-        return cached and map_to(cached, Dialog)
+    async def get_dialog_msgs(self, 
+                             dialog_id: int, 
+                             limit: int, 
+                             offset: int
+                             ) -> List[DialogMessage]:
+        ''' Get slice of list from newest limited'''
+        end = offset + limit - 1
+        cached = await self._cache.lrange(f"dialog:{dialog_id}", start=offset, end=end)
+        return cached and [map_to(c, DialogMessage) for c in cached]
+
+    async def cach_list(self, obj_list: List[DialogMessage]):
+        ''' Push list to cache '''
+        for d in obj_list:
+            await dialog_cache.rpush_dialog_msg(d)
 
     @fail_silently()
-    async def set_dialog(self, dialog: Dialog, expire: int) -> None:
-        await self._cache.set(f"dialog:{dialog.id}",
-                              json.dumps(jsonable_encoder(dialog)),
-                              ex=expire)
+    async def lpush_dialog_msg(self, dial_msg: DialogMessage) -> None:
+        ''' Push to the list at the top '''
+        await self._cache.lpush(f"dialog:{dial_msg.dialog_id}", 
+                                json.dumps(jsonable_encoder(dial_msg)))
 
     @fail_silently()
-    async def unset_dialog(self, id: int) -> None:
+    async def rpush_dialog_msg(self, dial_msg: DialogMessage) -> None:
+        ''' Push to the list at the end '''
+        await self._cache.rpush(f"dialog:{dial_msg.dialog_id}", 
+                                json.dumps(jsonable_encoder(dial_msg)))
+
+    @fail_silently()
+    async def len_dialog_msg(self, dialog_id: int) -> None:
+        return await self._cache.llen(f"dialog:{dialog_id}")
+
+    @fail_silently()
+    async def unset_dialog_msg(self, id: int) -> None:
         await self._cache.delete(f"dialog:{id}")
     
 
