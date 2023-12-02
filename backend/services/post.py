@@ -106,7 +106,6 @@ class PostService:
                 await post_cache.set_post(p, PostCache.POSTS_POP_EX)
             ids = [post.id for post in posts]
             await post_cache.set_posts_ids(user_id=user, ids=ids)
-        
 
 
 post_srv = PostService()
