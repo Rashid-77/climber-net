@@ -6,6 +6,7 @@ from fastapi import FastAPI, Depends
 
 from api.api_v1.api import api_router
 from api.deps import get_db
+from queue.queue import queue_rabbit
 from services.post import post_srv
 from services.dialog import dialog_srv
 from utils import get_settings
@@ -21,8 +22,10 @@ async def lifespan(app: FastAPI):
         logger.info(f'posts warmed up')
         await dialog_srv.warmup_dialogs(db=db)
         logger.info(f'dialogs warmed up')
-        
+    await queue_rabbit.connect()
     yield
+    
+    await queue_rabbit.close()
     logger.info(f'stop App')
 
 

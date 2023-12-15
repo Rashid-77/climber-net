@@ -7,6 +7,7 @@ from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 from fastapi import WebSocket, WebSocketException, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import HTMLResponse
+from queue.queue import queue_rabbit
 # from jose import JWTError
 # from pydantic import ValidationError
 # from sqlalchemy.orm import Session
@@ -25,6 +26,15 @@ logging.basicConfig(
     format="[%(asctime)s] %(levelname).1s %(message)s",
     datefmt="%Y.%m.%d %H:%M:%S",
     )
+
+
+async def lifespan(app: FastAPI):
+    logging.info(f'start App')
+    await queue_rabbit.connect()
+    await queue_rabbit.declare_queue("test")
+    yield
+    await queue_rabbit.close()
+    logging.info(f'stop App')
 
 
 app = FastAPI()
