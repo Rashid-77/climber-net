@@ -10,5 +10,7 @@ tenacity
 alembic
 sqlalchemy>=2.0
 aioredis
+aio_pika
+jinja2
 # dev
 pytest

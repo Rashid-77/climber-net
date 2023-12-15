@@ -1,17 +1,14 @@
-import json
-
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 import models
 import crud
 import schemas
 from api.deps import get_db, get_current_active_user
-from cache.post import post_cache
 from services.post import post_srv
-from services.friend import friend_srv
 from utils.log import get_logger
 logger = get_logger(__name__)
 
@@ -130,3 +127,44 @@ def delete_posts(
         )
     post = crud.post.remove(db, id=post_id)
     return post
+
+
+@router.get("/post/feed/posted", response_class=HTMLResponse)
+async def get(request: Request):
+    html = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Chat</title>
+        </head>
+        <body>
+            <h1>WebSocket Chat</h1>
+            <h2>Your ID: <span id="ws-id"></span></h2>
+            <form action="" onsubmit="sendMessage(event)">
+                <input type="text" id="messageText" autocomplete="off"/>
+                <button>Send</button>
+            </form>
+            <ul id='messages'>
+            </ul>
+            <script>
+                var client_id = Date.now()
+                document.querySelector("#ws-id").textContent = client_id;
+                var ws = new WebSocket(`ws://localhost:8000/ws/${client_id}`);
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data)
+                    message.appendChild(content)
+                    messages.appendChild(message)
+                };
+                function sendMessage(event) {
+                    var input = document.getElementById("messageText")
+                    ws.send(input.value)
+                    input.value = ''
+                    event.preventDefault()
+                }
+            </script>
+        </body>
+    </html>
+    """
+    return HTMLResponse(html)

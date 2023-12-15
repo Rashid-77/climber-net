@@ -1,3 +1,5 @@
+import uvicorn
+
 from contextlib import contextmanager
 
 from fastapi import FastAPI, Depends
@@ -26,3 +28,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(api_router, prefix=get_settings().API_V1_STR)
+
+
+if __name__ == "__main__":
+    logger.info(f'main at port={get_settings().app_port}')
+    uvicorn.run(app, host="0.0.0.0", port=int(get_settings().app_port))
+    logger.info('exit main')

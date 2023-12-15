@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     redis_host: str = os.getenv("REDIS_HOST", "")
     redis_port: str = os.getenv("REDIS_PORT", "")
 
+    rabit_user: str = os.getenv("RABBITMQ_USER", "")
+    rabit_pass: str = os.getenv("RABBITMQ_PASSWORD", "")
+    rabbit_host: str = os.getenv("RABBITMQ_HOST", "")
+    rabit_url: str = f"amqp://{rabit_user}:{rabit_pass}@{rabbit_host}/"
+
+    app_port: str = os.getenv("APP_PORT", "")
+
 
 # TODO Make this settings a global object
 def get_settings():
