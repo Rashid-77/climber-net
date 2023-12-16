@@ -37,7 +37,9 @@ async def create_post(
                 status_code=404,
                 detail="User not found.",
             )
-    return await post_srv.save_post(db, user=current_user, post_in=post_in)
+    post = await post_srv.save_post(db, user=current_user, post_in=post_in)
+    await post_srv.add_post_created_event(current_user, post_in)
+    return post
 
 
 @router.post("/feed/", response_model=List[schemas.PostRead])

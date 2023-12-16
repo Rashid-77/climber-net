@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List
 import uvicorn
@@ -7,37 +8,43 @@ from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 from fastapi import WebSocket, WebSocketException, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import HTMLResponse
-from queue.queue import queue_rabbit
+from queue_r.queue_rabmq import queue_rabbit
+from services.friend import friend_cache
 # from jose import JWTError
 # from pydantic import ValidationError
 # from sqlalchemy.orm import Session
-# from utils import get_settings
+from utils import get_settings
 
 # import crud
 
 # from api.deps import get_db
 # from utils.security import decode_access_token 
 
-import logging 
+from utils.log import get_logger
+logger = get_logger(__name__)
 
-logging.basicConfig(
-    filename="log.log",
-    level=logging.INFO,
-    format="[%(asctime)s] %(levelname).1s %(message)s",
-    datefmt="%Y.%m.%d %H:%M:%S",
-    )
+
+async def on_message(message: IncomingMessage):
+    txt = message.body.decode("utf-8")
+    logger.info(f'new msg = {json.loads(txt)}')
 
 
 async def lifespan(app: FastAPI):
-    logging.info(f'start App')
+    logger.info(f'start App')
     await queue_rabbit.connect()
-    await queue_rabbit.declare_queue("test")
+    queue_ws = await queue_rabbit.declare_queue("post")
+    await queue_ws.consume(on_message, no_ack = True)
+    tops = await friend_cache.get_popular_users()
+    logger.info(f'{tops=}')
+    for t in tops:
+        f = await friend_cache.get_my_friends(t)
+        logger.info(f'top={t}, {f}')
     yield
     await queue_rabbit.close()
-    logging.info(f'stop App')
+    logger.info(f'stop App')
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 port = os.getenv("WS_PORT", "8090")
 router = APIRouter()
 
@@ -67,8 +74,7 @@ manager = ConnectionManager()
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    logging.info("")
-    logging.info(f"Hi {client_id}")
+    logger.info(f"Hi {client_id}")
     await manager.connect(websocket)
     await manager.broadcast(f"Client #{client_id} connected")
     try:
@@ -79,19 +85,19 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{client_id} left the chat")
-        logging.info(f" Buy {client_id}")
+        logger.info(f" Buy {client_id}")
 
 
 @app.get("/health")
 async def health():
-    logging.info('/health')
-    logging.info("")
+    logger.info('/health')
     return {
         "health": "OK",
     }
 
 
 if __name__ == "__main__":
-    logging.info(f'ws at {port=}')
-    uvicorn.run(app, host="0.0.0.0", port=int(port))
-    logging.info('exit ws')
+    logger.info(f'ws at {port=}')
+    
+    uvicorn.run("ws:app", host="0.0.0.0", port=int(port), reload=True)
+    logger.info('exit ws')

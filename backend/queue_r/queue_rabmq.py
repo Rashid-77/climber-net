@@ -11,10 +11,9 @@ class RabbitQueue:
     
     async def connect(self):
         self.connection = await connect(self.url)
-
-    async def send_rabbitmq(self, msg: Any, routing_key: str):
         self.channel = await self.connection.channel()
 
+    async def send_rabbitmq(self, msg: Any, routing_key: str):
         await self.channel.default_exchange.publish(
             Message(json.dumps(msg.model_dump()).encode("utf-8")),
             routing_key = routing_key

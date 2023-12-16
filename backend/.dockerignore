@@ -4,4 +4,3 @@ env/
 log/
 logs/
 pg_data/
-websocket_server/

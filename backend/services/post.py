@@ -7,7 +7,7 @@ import schemas
 
 from cache.post import post_cache, PostCache
 from models import Post, User
-from queue.queue import queue_rabbit
+from queue_r.queue_rabmq import queue_rabbit
 from services.friend import friend_srv
 from utils.log import get_logger
 
@@ -108,8 +108,8 @@ class PostService:
             ids = [post.id for post in posts]
             await post_cache.set_posts_ids(user_id=user, ids=ids)
 
-    async def add_post_created_event(self, user: User, post: Post):
-        queue_rabbit.send_rabbitmq("test", "post")
+    async def add_post_created_event(self, user: User, post: schemas.PostRead):
+        await queue_rabbit.send_rabbitmq(post, "post")
 
 
 post_srv = PostService()

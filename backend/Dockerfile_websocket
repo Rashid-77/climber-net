@@ -1,0 +1,11 @@
+FROM python:3.10
+RUN mkdir /code
+WORKDIR /code
+COPY requirements.txt /code/
+RUN pip install --upgrade pip && pip install -r requirements.txt
+COPY /websocket_server/ /code/websocket_server
+COPY /common/ /code/common
+COPY /models/ /code/models
+COPY /schemas/ /code/schemas
+COPY /utils/ /code/utils
+COPY /queue_r/ /code/queue_r

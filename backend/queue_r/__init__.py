@@ -1,0 +1,1 @@
+from .queue_rabmq import RabbitQueue, queue_rabbit

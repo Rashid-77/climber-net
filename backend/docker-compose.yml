@@ -23,17 +23,19 @@ services:
       - websocket
 
   websocket:
-    build: websocket_server/
+    build: 
+      dockerfile: Dockerfile_websocket
     volumes:
       - .:/code
     env_file: 
       - .env
-    # command: [ 'sh', '-c',
-    #   'until curl http://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
-    #   do echo waiting for rabbitmq; sleep 2; done; 
-    #   python ws.py',
-    #   ]
-    command: python websocket_server/ws.py
+    ports:
+      - '8090:8090'
+    command: [ 'sh', '-c',
+      'until curl http://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
+      do echo waiting for rabbitmq; sleep 2; done; 
+      bash start_websocket_server.sh'
+      ]
     depends_on:
       - db
       - redis
