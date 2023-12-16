@@ -1,6 +1,7 @@
 import json
 import os
-from typing import List
+from typing import Dict
+
 import uvicorn
 
 from aio_pika import IncomingMessage, ExchangeType
@@ -22,25 +23,33 @@ from utils import get_settings
 
 from utils.log import get_logger
 
-logger = get_logger(__name__)
 port = os.getenv("WS_PORT", 8090)
 ws_id = os.getenv("WS_ID", 0)
 queue_post = RabbitQueue(url = "amqp://guest:guest@rabbitmq/")
+logger = get_logger(f'{__name__} {ws_id}')
+
 
 async def on_message(message: IncomingMessage):
-    message = message.body.decode("utf-8")
-    logger.info(f'{ws_id=}, new msg=({json.loads(message)})')
-    tops = await friend_cache.get_popular_users()
+    d = json.loads(message.body.decode("utf-8"))
+    post_author_id = d["wall_user_id"]
+    post = d["content"]
+    logger.info(f'{post_author_id}, {post}')
+    connected = manager.get_connected_users()
+    logger.info(f' {connected=}')
+    for fr_id in await friend_cache.get_my_friends(post_author_id):
+        if fr_id in connected:
+            await manager.send_personal_message(f'{post}', fr_id)
+            logger.info(f' {fr_id=}, msg_sent')
     # await message.ack() # TODO uncomment it
 
 
 async def lifespan(app: FastAPI):
     logger.info(f'{ws_id=}, start App')
-    d = await queue_post.connect()
-    d = await queue_post.declare_exchange("post_ex", ExchangeType.FANOUT)
+    await queue_post.connect()
+    await queue_post.declare_exchange("post_ex", ExchangeType.FANOUT)
     queue_ws = await queue_post.declare_queue(f"post_q:{ws_id}")
-    d = await queue_ws.bind(queue_post.exchange)
-    d = await queue_ws.consume(on_message, no_ack = True)
+    await queue_ws.bind(queue_post.exchange)
+    await queue_ws.consume(on_message, no_ack = True)
     tops = await friend_cache.get_popular_users()
     logger.info(f'{tops=}')
     for t in tops:
@@ -56,22 +65,30 @@ app = FastAPI(lifespan=lifespan)
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: Dict[WebSocket] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, user_id, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
-        await self.send_personal_message(f"You are online", websocket)
+        self.active_connections[str(user_id)] = websocket
+        await self.send_personal_message(f"You are online", user_id)
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+    def disconnect(self, user_id):
+        try:
+            self.active_connections.pop(str(user_id))
+        except KeyError:
+            logger.debug(f'{ws_id=} KeyError {user_id=}')
+            pass
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
+    async def send_personal_message(self, message: str, user_id):
+        try:
+            websocket: WebSocket = self.active_connections[str(user_id)]
+            await websocket.send_text(message)
+        except KeyError:
+            logger.debug(f'{ws_id=} KeyError {user_id=}')
+            pass
+    
+    def get_connected_users(self) -> list:
+        return list(map(int, list(self.active_connections.keys())))
 
 
 manager = ConnectionManager()
@@ -80,16 +97,14 @@ manager = ConnectionManager()
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int):
     logger.info(f"Hi {client_id}")
-    await manager.connect(websocket)
-    await manager.broadcast(f"Client #{client_id} connected")
+    await manager.connect(client_id, websocket)
+    # await manager.send_personal_message(f"you connected", client_id)
+    
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.send_personal_message(f"You wrote: {data}", websocket)
-            await manager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{client_id} left the chat")
         logger.info(f" Buy {client_id}")
 
 
