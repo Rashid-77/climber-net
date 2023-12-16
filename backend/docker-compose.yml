@@ -20,17 +20,39 @@ services:
       - db
       - redis
       - rabbitmq
-      - websocket
+      - websocket1
+      - websocket2
 
-  websocket:
+  websocket1:
     build: 
       dockerfile: Dockerfile_websocket
     volumes:
       - .:/code
     env_file: 
       - .env
-    ports:
-      - '8090:8090'
+    environment:
+      - WS_ID=1
+      - WS_PORT=8081
+    command: [ 'sh', '-c',
+      'until curl http://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
+      do echo waiting for rabbitmq; sleep 2; done; 
+      bash start_websocket_server.sh'
+      ]
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+
+  websocket2:
+    build: 
+      dockerfile: Dockerfile_websocket
+    volumes:
+      - .:/code
+    env_file: 
+      - .env
+    environment:
+      - WS_ID=2
+      - WS_PORT=8082
     command: [ 'sh', '-c',
       'until curl http://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
       do echo waiting for rabbitmq; sleep 2; done; 
@@ -85,4 +107,5 @@ services:
       - ./haproxy:/usr/local/etc/haproxy
     depends_on:
       - backend
-      - websocket
+      - websocket1
+      - websocket2

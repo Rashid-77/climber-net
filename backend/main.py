@@ -2,6 +2,7 @@ import uvicorn
 
 from contextlib import contextmanager
 
+from aio_pika import ExchangeType
 from fastapi import FastAPI, Depends
 
 from api.api_v1.api import api_router
@@ -28,7 +29,7 @@ async def lifespan(app: FastAPI):
         await friend_srv.cache_top_users_friends(db=db)
         logger.info(f'friends of top popular users cached')
     await queue_rabbit.connect()
-    await queue_rabbit.declare_queue("post")    # just to see it dashboard. TODO delete from here
+    await queue_rabbit.declare_exchange("post_ex", ExchangeType.FANOUT)
     yield
     
     await queue_rabbit.close()

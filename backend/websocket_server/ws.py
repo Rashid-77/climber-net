@@ -3,12 +3,12 @@ import os
 from typing import List
 import uvicorn
 
-from aio_pika import connect, IncomingMessage
+from aio_pika import IncomingMessage, ExchangeType
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 from fastapi import WebSocket, WebSocketException, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import HTMLResponse
-from queue_r.queue_rabmq import queue_rabbit
+from queue_r.queue_rabmq import RabbitQueue
 from services.friend import friend_cache
 # from jose import JWTError
 # from pydantic import ValidationError
@@ -21,32 +21,37 @@ from utils import get_settings
 # from utils.security import decode_access_token 
 
 from utils.log import get_logger
-logger = get_logger(__name__)
 
+logger = get_logger(__name__)
+port = os.getenv("WS_PORT", 8090)
+ws_id = os.getenv("WS_ID", 0)
+queue_post = RabbitQueue(url = "amqp://guest:guest@rabbitmq/")
 
 async def on_message(message: IncomingMessage):
-    txt = message.body.decode("utf-8")
-    logger.info(f'new msg = {json.loads(txt)}')
+    message = message.body.decode("utf-8")
+    logger.info(f'{ws_id=}, new msg=({json.loads(message)})')
+    tops = await friend_cache.get_popular_users()
+    # await message.ack() # TODO uncomment it
 
 
 async def lifespan(app: FastAPI):
-    logger.info(f'start App')
-    await queue_rabbit.connect()
-    queue_ws = await queue_rabbit.declare_queue("post")
-    await queue_ws.consume(on_message, no_ack = True)
+    logger.info(f'{ws_id=}, start App')
+    d = await queue_post.connect()
+    d = await queue_post.declare_exchange("post_ex", ExchangeType.FANOUT)
+    queue_ws = await queue_post.declare_queue(f"post_q:{ws_id}")
+    d = await queue_ws.bind(queue_post.exchange)
+    d = await queue_ws.consume(on_message, no_ack = True)
     tops = await friend_cache.get_popular_users()
     logger.info(f'{tops=}')
     for t in tops:
         f = await friend_cache.get_my_friends(t)
         logger.info(f'top={t}, {f}')
     yield
-    await queue_rabbit.close()
-    logger.info(f'stop App')
+    await queue_post.close()
+    logger.info(f'{ws_id=}, stop App')
 
 
 app = FastAPI(lifespan=lifespan)
-port = os.getenv("WS_PORT", "8090")
-router = APIRouter()
 
 
 class ConnectionManager:
@@ -97,7 +102,6 @@ async def health():
 
 
 if __name__ == "__main__":
-    logger.info(f'ws at {port=}')
-    
+    logger.info(f'{ws_id=}, at {port=}')
     uvicorn.run("ws:app", host="0.0.0.0", port=int(port), reload=True)
-    logger.info('exit ws')
+    logger.info('{ws_id=}, exit')

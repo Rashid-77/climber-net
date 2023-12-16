@@ -109,7 +109,7 @@ class PostService:
             await post_cache.set_posts_ids(user_id=user, ids=ids)
 
     async def add_post_created_event(self, user: User, post: schemas.PostRead):
-        await queue_rabbit.send_rabbitmq(post, "post")
+        await queue_rabbit.send_rabbitmq(post, "post_ex")
 
 
 post_srv = PostService()
