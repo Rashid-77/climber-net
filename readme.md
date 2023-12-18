@@ -113,3 +113,27 @@ After rebalancing is completed, check that the data is evenly distributed across
 Then attach to citus master as in step 1 and step 2 previosly described and run:
     SELECT * from citus_disable_node('name_of_your_inactive_node', 5432);
 
+**Scaling websocket service** 
+
+ Haproxy is used here to loadbalance websocket service.
+ After new instance of websocket service was started you should add host name and port to the haproxy.cfg in the haproxy folder of the project. After that haproxy have to be reloaded, not restarted. 
+ Do it with command <code>systemctl reload haproxy</code> inside haproxy container.
+
+
+**To make RabbitMq cluster**
+
+1. <code>docker compose up</code>
+2. Go to rabbit-master admin. Start browser then past and go http://127.0.0.1:15672
+3. username "guest", password "guest" (without doublequotes)
+4. <code>docker exec -it rmq-slave-1 bash</code>
+   
+   <code>rabbitmqctl stop_app</code>
+   
+   <code>rabbitmqctl join_cluster rabbit@rabbit</code>
+   
+   <code>rabbitmqctl start_app</code>
+
+5. To check the cluster operation launch another tab in the browser and then paste and go http://127.0.0.1:15673
+6. Сheck that there are two nodes rabbit@rabbit and rabbit@rabbit-slave
+
+In a RabbitMq cluster there is no concept of a “master” node. All nodes are equal and can be stopped and started in any order. Except for one exception. If we stop all the cluster services one at a time, then the one that stopped last should start first when we start turning them back on.
