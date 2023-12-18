@@ -165,3 +165,5 @@ test-local.sh
 test.env
 test.docker-compose.yml
 people*.sql
+
+rabbitmq/

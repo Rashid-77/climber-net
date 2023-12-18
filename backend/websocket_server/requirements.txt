@@ -1,0 +1,8 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0.post1
+passlib[bcrypt]==1.7.4
+python-jose==3.3.0
+bcrypt==4.0.1
+pyyaml==6.0.1
+aioredis
+aio_pika

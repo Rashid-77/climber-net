@@ -27,10 +27,7 @@ class FriendService:
         fr_ids = q1.union(q2).all()
         return [i.user_b if i.user_a == user_id else i.user_a for i in fr_ids]
 
-    async def get_top_popular_users(self, db: Session) -> List:
-        top_users: str = await friend_cache.get_popular_users()
-        if top_users:
-            return top_users
+    def get_top_popular_users_from_db(self, db: Session) -> List:
         stmt = '''
                 SELECT 
                     COALESCE(t1.user_a, t2.user_b) AS usr, 
@@ -42,9 +39,26 @@ class FriendService:
                 ON t1.user_a = t2.user_b
                 ORDER BY cnt DESC;
                 '''
-        top_users = [r[0] for r in db.execute(text(stmt)) if r[1] > 0]
-        logger.info(f'{top_users=}')
+        return [r[0] for r in db.execute(text(stmt)) if r[1] > 0][:3]
+
+    async def get_top_popular_users(self, db: Session) -> List:
+        top_users: str = await friend_cache.get_popular_users()
+        if top_users:
+            return top_users
+        top_users = self.get_top_popular_users_from_db(db)
+        
         await friend_cache.set_popular_users(top_users)
         return top_users
+
+    async def cache_top_popular_users(self, db: Session):
+        top_users = self.get_top_popular_users_from_db(db)
+        await friend_cache.set_popular_users(top_users)
+
+    async def cache_top_users_friends(self, db: Session):
+        top_users = self.get_top_popular_users_from_db(db)
+        for user_id in top_users:
+            ids = friend_srv.get_my_friends(db, user_id)
+            await friend_cache.set_my_friends(user_id, ids)
+
 
 friend_srv = FriendService()

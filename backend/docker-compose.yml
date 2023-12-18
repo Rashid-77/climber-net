@@ -5,16 +5,63 @@ services:
     container_name: climb-net
     build:
       dockerfile: Dockerfile
-    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    command: [ 'sh', '-c',
+        'until curl http://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
+        do echo waiting for rabbitmq; sleep 2; done; 
+        python main.py'
+        ]
     env_file: 
       - .env
     volumes:
       - .:/code
     ports:
-      - '8000:8000'
+      - '8055:8055'
     depends_on:
       - db
       - redis
+      - rabbitmq
+      - websocket1
+      - websocket2
+
+  websocket1:
+    build: 
+      dockerfile: Dockerfile_websocket
+    volumes:
+      - .:/code
+    env_file: 
+      - .env
+    environment:
+      - WS_ID=1
+      - WS_PORT=8081
+    command: [ 'sh', '-c',
+      'until curl http://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
+      do echo waiting for rabbitmq; sleep 2; done; 
+      bash start_websocket_server.sh'
+      ]
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+
+  websocket2:
+    build: 
+      dockerfile: Dockerfile_websocket
+    volumes:
+      - .:/code
+    env_file: 
+      - .env
+    environment:
+      - WS_ID=2
+      - WS_PORT=8082
+    command: [ 'sh', '-c',
+      'until curl http://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@rabbitmq:15672/api/aliveness-test/%2F;
+      do echo waiting for rabbitmq; sleep 2; done; 
+      bash start_websocket_server.sh'
+      ]
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
 
   db:
     container_name: climber_db 
@@ -39,3 +86,26 @@ services:
     expose:
         - 6379
     command: redis-server /usr/local/etc/redis/redis.conf
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - .env
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672
+
+  lb:
+    image: haproxy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./haproxy:/usr/local/etc/haproxy
+    depends_on:
+      - backend
+      - websocket1
+      - websocket2

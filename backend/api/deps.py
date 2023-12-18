@@ -13,8 +13,6 @@ from schemas.token import TokenData
 from utils.config import get_settings
 from utils.security import decode_access_token  # noqa
 
-# import get_logger
-# logger = get_logger(__name__)
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{get_settings().API_V1_STR}/login")
 
