@@ -1,27 +1,25 @@
 import json
 import os
+import uvicorn
 from typing import Dict
 
-import uvicorn
-
 from aio_pika import IncomingMessage, ExchangeType
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi import WebSocket, WebSocketException, WebSocketDisconnect
-from fastapi.security import OAuth2PasswordBearer
-from fastapi.responses import HTMLResponse
+from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from queue_r.queue_rabmq import RabbitQueue
+
+import crud
+import models
+from api.deps import get_db
 from services.friend import friend_cache
-# from jose import JWTError
-# from pydantic import ValidationError
-# from sqlalchemy.orm import Session
+from jose import JWTError
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
 from utils import get_settings
-
-# import crud
-
-# from api.deps import get_db
-# from utils.security import decode_access_token 
-
 from utils.log import get_logger
+from utils.security import decode_access_token
+
 
 port = os.getenv("WS_PORT", 8090)
 ws_id = os.getenv("WS_ID", 0)
@@ -77,7 +75,6 @@ class ConnectionManager:
             self.active_connections.pop(str(user_id))
         except KeyError:
             logger.debug(f'{ws_id=} KeyError {user_id=}')
-            pass
 
     async def send_personal_message(self, message: str, user_id):
         try:
@@ -85,7 +82,6 @@ class ConnectionManager:
             await websocket.send_text(message)
         except KeyError:
             logger.debug(f'{ws_id=} KeyError {user_id=}')
-            pass
     
     def get_connected_users(self) -> list:
         return list(map(int, list(self.active_connections.keys())))
@@ -93,9 +89,37 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+async def api_key_header(websocket: WebSocket):
+    api_key_header = APIKeyHeader(name="secret")
+    return await api_key_header(websocket)
+
+
+async def authenticate_user(
+        db: Session = Depends(get_db), 
+        token: str = Depends(api_key_header)
+    ):
+    try:
+        payload = decode_access_token(token)
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    except (JWTError, ValidationError) as e:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    user = crud.user.get(db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 
 @app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
+async def websocket_endpoint(
+    websocket: WebSocket, 
+    client_id: int, 
+    user: models.User = Depends(authenticate_user)
+    ):
+    if client_id != user.id:
+        logger.info(f"{client_id} != {user.id}")
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     logger.info(f"Hi {client_id}")
     await manager.connect(client_id, websocket)
     # await manager.send_personal_message(f"you connected", client_id)

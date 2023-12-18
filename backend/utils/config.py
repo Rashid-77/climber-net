@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     rabit_url: str = f"amqp://{rabit_user}:{rabit_pass}@{rabbit_host}/"
 
     app_port: str = os.getenv("APP_PORT", "")
+    secret: str = os.getenv("SECRET", "")
 
 
 # TODO Make this settings a global object

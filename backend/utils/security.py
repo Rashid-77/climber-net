@@ -4,11 +4,11 @@ from typing import Any, Union
 
 from jose import jwt
 from passlib.context import CryptContext
+from utils.config import get_settings
 
 # to get a string like this run:
 # openssl rand -hex 32
-# TODO move this const to the settings
-SECRET_KEY = secrets.token_urlsafe(32)
+SECRET_KEY = get_settings().secret
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 365 * 24 * 60
 
