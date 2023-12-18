@@ -38,7 +38,7 @@ async def on_message(message: IncomingMessage):
         if fr_id in connected:
             await manager.send_personal_message(f'{post}', fr_id)
             logger.info(f' {fr_id=}, msg_sent')
-    # await message.ack() # TODO uncomment it
+    await message.ack()
 
 
 async def lifespan(app: FastAPI):
@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     await queue_post.declare_exchange("post_ex", ExchangeType.FANOUT)
     queue_ws = await queue_post.declare_queue(f"post_q:{ws_id}")
     await queue_ws.bind(queue_post.exchange)
-    await queue_ws.consume(on_message, no_ack = True)
+    await queue_ws.consume(on_message, no_ack = False)
     tops = await friend_cache.get_popular_users()
     logger.info(f'{tops=}')
     for t in tops:
