@@ -167,3 +167,4 @@ test.docker-compose.yml
 people*.sql
 
 rabbitmq/
+tarantool_data/
