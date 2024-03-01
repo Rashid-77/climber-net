@@ -1,11 +1,10 @@
 from typing import Generic, Type
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-
 import schemas
 from crud.base import ModelType
 from models.user import User
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 # import get_logger
 # logger = get_logger(__name__)

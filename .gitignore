@@ -160,7 +160,6 @@ db_test_backend_mysql/
 pg_data
 dump.rdb
 
-tests/
 test-local.sh
 test.env
 test.docker-compose.yml
@@ -168,3 +167,4 @@ people*.sql
 
 rabbitmq/
 tarantool_data/
+docker-stack.yml
