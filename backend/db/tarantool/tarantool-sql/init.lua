@@ -65,13 +65,36 @@ end
 -------------------------------------------------------------------------------
 function dialmsg_insert(dial_id, u_id1, u_id2, msg)
     return box.execute(
-        [[INSERT INTO dialogmessage VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, now(), now());]], 
-        {dial_id, u_id1, u_id2, msg, FALSE, FALSE, FALSE, dt, dt}
+        [[
+            INSERT INTO dialogmessage 
+            VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, now(), now());
+        ]],
+        {dial_id, u_id1, u_id2, msg, FALSE, FALSE, FALSE}
     )
 end
 
 
+function dialmsg_select(id)
+    return box.execute([[SELECT * FROM dialogmessage WHERE id=(?);]], {id})
+end
+
+
+function dialmsg_select_all()
+    return box.execute([[SELECT * FROM dialogmessage;]])
+end
+
+
+function dialogmsg_del(id)
+    return box.execute([[DELETE FROM dialogmessage WHERE id=(?);]], {id})
+end
+
+
 -- function dialmsg_select(u_id1, u_id2, limit, offset)
---     return box.execute([[SELECT * FROM dialogmessage WHERE id=(?);]], {id})
+--     return box.execute(
+--         [[
+--             SELECT * FROM dialogmessage 
+--             WHERE id=(?);
+--         ]], {id}
+--     )
 -- end
 
