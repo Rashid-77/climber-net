@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     app_port: str = os.getenv("APP_PORT", "")
     secret: str = os.getenv("SECRET", "")
 
+    tarantool_url: str = os.getenv("TARANT_URL", "")
+    tarantool_port: str = os.getenv("TARANT_PORT", "")
+
 
 # TODO Make this settings a global object
 def get_settings():
