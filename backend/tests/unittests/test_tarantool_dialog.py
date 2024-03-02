@@ -4,8 +4,9 @@ from db.tarantool.db import dialog_mdb
 
 class TestDialog:
     def test_create_dialog(self, u_id1=1, u_id2=2):
-        print("")
+        # print("")
         d = dialog.create(dialog_mdb, u_id1, u_id2)
+        # print(d)
         assert d.data[0].get("row_count") == 1
 
     def test_get(self, u_id1=1, u_id2=2):

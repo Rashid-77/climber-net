@@ -38,7 +38,7 @@ box.once('init', init)
 -------------------------------------------------------------------------------
 function dialog_insert(u_id1, u_id2, msg)
     return box.execute(
-        [[INSERT INTO dialog VALUES (NULL, ?, ?);]], {u_id1, u_id2}
+        [[INSERT INTO dialog VALUES (NULL, ?, ?, now());]], {u_id1, u_id2}
     )
 end
 
@@ -64,9 +64,8 @@ end
 
 -------------------------------------------------------------------------------
 function dialmsg_insert(dial_id, u_id1, u_id2, msg)
-    dt = now()
     return box.execute(
-        [[INSERT INTO dialogmessage VALUES (NULL, ?, ?, ?, ?);]], 
+        [[INSERT INTO dialogmessage VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, now(), now());]], 
         {dial_id, u_id1, u_id2, msg, FALSE, FALSE, FALSE, dt, dt}
     )
 end
