@@ -12,7 +12,7 @@ function init()
                 created DATETIME
             );
         ]])
-        box.schema.space.create('dialog')
+        box.schema.space.create('dialogmessage')
         box.execute(
             [[
                 CREATE TABLE dialogmessage 
@@ -69,7 +69,7 @@ function dialmsg_insert(dial_id, u_id1, u_id2, msg)
             INSERT INTO dialogmessage 
             VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, now(), now());
         ]],
-        {dial_id, u_id1, u_id2, msg, FALSE, FALSE, FALSE}
+        {dial_id, u_id1, u_id2, msg, false, false, false}
     )
 end
 
@@ -80,9 +80,16 @@ end
 
 
 function dialmsg_select_all()
-    return box.execute([[SELECT * FROM dialogmessage;]])
+    return box.execute([[ SELECT * FROM dialogmessage; ]])
 end
 
+function dialmsg_select_all_(skip, limit)
+    -- not tested !!!
+    return box.execute(
+        [[
+            SELECT * FROM dialogmessage OFFSET (?) LIMIT (?);
+        ]], {skip, limit})
+end
 
 function dialogmsg_del(id)
     return box.execute([[DELETE FROM dialogmessage WHERE id=(?);]], {id})

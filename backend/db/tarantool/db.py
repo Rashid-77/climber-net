@@ -41,15 +41,48 @@ class TarantoolSqlDialog:
 
 
 class TarantoolSqlDialogMsg:
-    """crud for meaages beetween 2 users"""
+    """crud for messages beetween 2 users"""
 
     def __init__(self, url: str = "tarantool", port: int = 3301):
         self.conn = tarantool.connect(url, port)
 
-    def insert(self, dial_id, u_id_1, u_id_2, msg):
+    def insert(self, dial_id, u_id_1, u_id_2, msg: str):
+        """
+        Returns " - {'autoincrement_ids': [1], 'row_count': 1}" if inserted
+        where [1] is a id number
+        """
         return self.conn.call(
             "dialmsg_insert", (dial_id, u_id_1, u_id_2, msg, False, False, False)
         )
+
+    def select(self, id):
+        """Returns None if not found"""
+        print("dial_msg_mdb select")
+        d = self.conn.call("dialmsg_select", (id))
+        if len(d.data[0].get("rows")):
+            return d.data[0].get("rows")[0]
+
+    def select_all(self):
+        d = self.conn.call("dialmsg_select_all", ())
+        if d.data[0]:
+            return d.data[0].get("rows")
+        return []
+
+    def select_all_(self, skip: int = 0, limit: int = 100):
+        print("dial_msg_mdb select_all()")
+        print(f"{skip=}, {limit=}")
+        d = self.conn.call("dialmsg_select_all", (skip, limit))
+        if d.data[0]:
+            print("len=", len(d.data[0].get("rows")))
+            return d.data[0].get("rows")
+        return []
+
+    def delete(self, id):
+        """
+        Returns " - {'row_count': 0}" if not found
+        returns " - {'row_count': 1}" if deleted
+        """
+        return self.conn.call("dialogmsg_del", (id))
 
 
 dialog_mdb = TarantoolSqlDialog(url=t_url, port=t_port)
