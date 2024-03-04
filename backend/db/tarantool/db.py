@@ -57,23 +57,13 @@ class TarantoolSqlDialogMsg:
 
     def select(self, id):
         """Returns None if not found"""
-        print("dial_msg_mdb select")
         d = self.conn.call("dialmsg_select", (id))
         if len(d.data[0].get("rows")):
             return d.data[0].get("rows")[0]
 
-    def select_all(self):
-        d = self.conn.call("dialmsg_select_all", ())
-        if d.data[0]:
-            return d.data[0].get("rows")
-        return []
-
-    def select_all_(self, skip: int = 0, limit: int = 100):
-        print("dial_msg_mdb select_all()")
-        print(f"{skip=}, {limit=}")
+    def select_all(self, skip: int = 0, limit: int = 100):
         d = self.conn.call("dialmsg_select_all", (skip, limit))
         if d.data[0]:
-            print("len=", len(d.data[0].get("rows")))
             return d.data[0].get("rows")
         return []
 

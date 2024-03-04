@@ -73,3 +73,29 @@ class TestDialogMsg:
         d = dialog_msg.get_multi(dial_msg_mdb)
         res = dialog_msg.delete(dial_msg_mdb, id=d[0].id)
         assert res.id == d[0].id
+
+    def test_get_all_dialog_msg(self, u_id1=1, u_id2=2):
+        all_msgs = dialog_msg.get_multi(dial_msg_mdb)
+        for d in all_msgs:
+            dialog_msg.delete(dial_msg_mdb, id=d.id)
+
+        all_msgs = dialog_msg.get_multi(dial_msg_mdb)
+        assert len(all_msgs) == 0
+
+        dial = dialog.create(dialog_mdb, u_id1, u_id2)
+        u1, u2 = User(id=u_id1), User(id=u_id2)
+        msgs = ("f1", "f2", "f3", "f4", "f5", "f6")
+        for m in msgs:
+            dialog_msg.create(
+                dial_msg_mdb,
+                dialog=dial,
+                obj_in=DialogMsgCreate(content=m),
+                from_user=u1,
+                to_user=u2,
+            )
+
+        all_msgs = dialog_msg.get_multi(dial_msg_mdb, skip=3, limit=2)
+
+        assert len(all_msgs) == 2
+        assert all_msgs[0].content == "f4"
+        assert all_msgs[1].content == "f5"

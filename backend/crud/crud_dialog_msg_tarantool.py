@@ -38,8 +38,10 @@ class CRUDDialogMsg:
         d = db.select(id)
         return DialogMessage(data=d)
 
-    def get_multi(self, db: TarantoolSqlDialogMsg) -> List[DialogMessage]:
-        d = db.select_all()
+    def get_multi(
+        self, db: TarantoolSqlDialogMsg, skip: int = 0, limit: int = 100
+    ) -> List[DialogMessage]:
+        d = db.select_all(skip, limit)
         return [DialogMessage(data=row) for row in d]
 
     def delete(self, db: TarantoolSqlDialogMsg, id: int):

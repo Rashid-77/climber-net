@@ -79,29 +79,14 @@ function dialmsg_select(id)
 end
 
 
-function dialmsg_select_all()
-    return box.execute([[ SELECT * FROM dialogmessage; ]])
-end
-
-function dialmsg_select_all_(skip, limit)
-    -- not tested !!!
+function dialmsg_select_all(skip, limit)
     return box.execute(
         [[
-            SELECT * FROM dialogmessage OFFSET (?) LIMIT (?);
-        ]], {skip, limit})
+            SELECT * FROM dialogmessage LIMIT ? OFFSET ?;
+        ]], {limit, skip})
 end
+
 
 function dialogmsg_del(id)
     return box.execute([[DELETE FROM dialogmessage WHERE id=(?);]], {id})
 end
-
-
--- function dialmsg_select(u_id1, u_id2, limit, offset)
---     return box.execute(
---         [[
---             SELECT * FROM dialogmessage 
---             WHERE id=(?);
---         ]], {id}
---     )
--- end
-
