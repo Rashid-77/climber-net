@@ -33,7 +33,7 @@ class CRUDDialogMsg(CRUDBase[DialogMessage, DialogMsgCreate, DialogMsgUpdate]):
         return db_obj
 
     def get_dialog_list(
-        self, db: Session, user_a: int, user_b: int, limit: int = 100, offset: int = 0
+        self, db: Session, user_a: int, user_b: int, offset: int = 0, limit: int = 100
     ) -> List[DialogMessage]:
         """Get messages between two users"""
         stmt = """

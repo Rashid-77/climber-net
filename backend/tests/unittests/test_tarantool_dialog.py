@@ -32,6 +32,11 @@ class TestDialog:
 class TestDialogMsg:
     last_dial_msg_id = 0
 
+    def clean_dialog_msg_db(self):
+        all_msgs = dialog_msg.get_multi(dial_msg_mdb)
+        for d in all_msgs:
+            dialog_msg.delete(dial_msg_mdb, id=d.id)
+
     def test_create_dialog_msg(
         self,
         from_user_id=1,
@@ -75,10 +80,7 @@ class TestDialogMsg:
         assert res.id == d[0].id
 
     def test_get_all_dialog_msg(self, u_id1=1, u_id2=2):
-        all_msgs = dialog_msg.get_multi(dial_msg_mdb)
-        for d in all_msgs:
-            dialog_msg.delete(dial_msg_mdb, id=d.id)
-
+        self.clean_dialog_msg_db()
         all_msgs = dialog_msg.get_multi(dial_msg_mdb)
         assert len(all_msgs) == 0
 
@@ -93,9 +95,42 @@ class TestDialogMsg:
                 from_user=u1,
                 to_user=u2,
             )
-
         all_msgs = dialog_msg.get_multi(dial_msg_mdb, skip=3, limit=2)
 
         assert len(all_msgs) == 2
         assert all_msgs[0].content == "f4"
         assert all_msgs[1].content == "f5"
+
+    def test_get_list_dialog_msg(self, u_id1=1, u_id2=2):
+        self.clean_dialog_msg_db()
+        all_msgs = dialog_msg.get_multi(dial_msg_mdb)
+        assert len(all_msgs) == 0
+        data = [
+            ("hi", 1, 2),
+            ("how r u?", 1, 2),
+            ("im ok", 2, 1),
+            ("hey alice", 2, 3),
+            ("watsup?", 1, 4),
+            ("nothing", 4, 1),
+            ("is anybody home?", 3, 4),
+            ("what r u doing?", 2, 1),
+        ]
+        dial = dialog.create(dialog_mdb, u_id1, u_id2)
+        for d in data:
+            dialog_msg.create(
+                dial_msg_mdb,
+                dialog=dial,
+                obj_in=DialogMsgCreate(content=d[0]),
+                from_user=User(id=d[1]),
+                to_user=User(id=d[2]),
+            )
+        all_msgs = dialog_msg.get_multi(dial_msg_mdb)
+        assert len(all_msgs) == len(data)
+
+        dial = dialog_msg.get_dialog_list(dial_msg_mdb, 1, 4)
+        assert dial[0].from_user_id == 1
+        assert dial[0].to_user_id == 4
+        assert dial[0].content == data[5][0]
+        assert dial[1].from_user_id == 1
+        assert dial[1].to_user_id == 4
+        assert dial[1].content == data[4][0]

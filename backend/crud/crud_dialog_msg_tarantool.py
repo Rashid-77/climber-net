@@ -52,5 +52,28 @@ class CRUDDialogMsg:
         if res.data[0].get("row_count") == 1:
             return DialogMessage(data=d)
 
+    def get_dialog_list(
+        self,
+        db: TarantoolSqlDialogMsg,
+        user_a: int,
+        user_b: int,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> List[DialogMessage]:
+        """Get messages between two users"""
+
+        stmt = """
+            SELECT * FROM dialogmessage
+            WHERE (from_user_id=:a and to_user_id=:b)
+            UNION
+            SELECT * FROM dialogmessage
+            WHERE (from_user_id=:b and to_user_id=:a)
+            ORDER BY id DESC
+            LIMIT :lim
+            OFFSET :offs;
+            """
+        d = db.get_dialog_(stmt, user_a, user_b, offset, limit)
+        return [DialogMessage(data=row) for row in d]
+
 
 dialog_msg = CRUDDialogMsg()

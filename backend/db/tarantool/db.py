@@ -74,6 +74,10 @@ class TarantoolSqlDialogMsg:
         """
         return self.conn.call("dialogmsg_del", (id))
 
+    def get_dialog_(self, stmt: str, u1: int, u2: int, skip: int = 0, limit: int = 100):
+        d = self.conn.execute(stmt, {"a": u1, "b": u2, "offs": skip, "lim": limit})
+        return d if len(d) else []
+
 
 dialog_mdb = TarantoolSqlDialog(url=t_url, port=t_port)
 dial_msg_mdb = TarantoolSqlDialogMsg(url=t_url, port=t_port)
