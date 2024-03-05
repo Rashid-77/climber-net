@@ -3,6 +3,7 @@ from typing import List
 from db.tarantool.db import TarantoolSqlDialogMsg
 from models.dialog import Dialog, DialogMessage
 from models.user import User
+from schemas.dialog import DialogInfoStat
 from schemas.dialog_msg import DialogMsgCreate
 
 
@@ -74,6 +75,26 @@ class CRUDDialogMsg:
             """
         d = db.get_dialog_(stmt, user_a, user_b, offset, limit)
         return [DialogMessage(data=row) for row in d]
+
+    def get_top_dialogs(self, db: TarantoolSqlDialogMsg) -> List[DialogInfoStat]:
+        # TODO check if top_chatters exists in cache
+        stmt = """
+                SELECT dm.dialog_id, d.user1_id, d.user2_id, count(*) as cnt
+                FROM dialogmessage as dm
+                JOIN dialog as d ON d.id = dm.dialog_id
+                GROUP BY dialog_id, d.user1_id, d.user2_id
+                ORDER BY cnt DESC;
+                """
+
+        items = db.get_top_dialogs(stmt)
+        top_chatters = [
+            DialogInfoStat(id=r[0], user_a=r[1], user_b=r[2], cnt_msg=r[3])
+            for r in items
+        ]
+        # TODO limit top
+        top_chatters = top_chatters[:3]
+        # TODO put top_chatters to cache
+        return top_chatters
 
 
 dialog_msg = CRUDDialogMsg()

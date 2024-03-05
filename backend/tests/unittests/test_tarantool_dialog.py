@@ -12,21 +12,29 @@ class TestDialog:
         assert d.id > 0
 
     def test_get_dialog(self):
-        dialog.create(dialog_mdb, 1, 2)
-        d = dialog.get_multi(dialog_mdb, 1, 2)
-        res = dialog.get(dialog_mdb, id=d[0].id)
-        assert res.id == d[0].id
+        d = dialog.create(dialog_mdb, 1, 2)
+        res = dialog.get(dialog_mdb, id=d.id)
+        assert res.id == d.id
 
-    def test_get_multi_dialog(self, u_id1=1, u_id2=2):
-        d = dialog.get_multi(dialog_mdb, u_id1, u_id2)
-        assert isinstance(d, list)
-        assert d[0].user_a == u_id1
-        assert d[0].user_b == u_id2
+    def test_get_dialog_by_users(self):
+        dg = []
+        dg.append(dialog.create(dialog_mdb, 1, 3))
+        dg.append(dialog.create(dialog_mdb, 3, 4))
+        dg.append(dialog.create(dialog_mdb, 5, 6))
+        d = dialog.get_by_users(dialog_mdb, 1, 3)
+        assert d.user_a == dg[0].user_a
+        assert d.user_b == dg[0].user_b
+        d = dialog.get_by_users(dialog_mdb, 3, 4)
+        assert d.user_a == dg[1].user_a
+        assert d.user_b == dg[1].user_b
+        d = dialog.get_by_users(dialog_mdb, 5, 6)
+        assert d.user_a == dg[2].user_a
+        assert d.user_b == dg[2].user_b
 
     def test_delete_dialog(self, id=1):
-        d = dialog.get_multi(dialog_mdb, user_a=1, user_b=2)
-        res = dialog.delete(dialog_mdb, id=d[0].id)
-        assert res.id == d[0].id
+        d = dialog.get_by_users(dialog_mdb, user_a=1, user_b=2)
+        res = dialog.delete(dialog_mdb, id=d.id)
+        assert res.id == d.id
 
 
 class TestDialogMsg:
@@ -57,10 +65,10 @@ class TestDialogMsg:
         assert d.to_user_id == 2
 
     def test_get_dialog_msg(self, u_id1=1, u_id2=2):
-        dial = dialog.get_multi(dialog_mdb, u_id1, u_id2)
+        dial = dialog.get_by_users(dialog_mdb, u_id1, u_id2)
         d1 = dialog_msg.create(
             dial_msg_mdb,
-            dialog=dial[0],
+            dialog=dial,
             obj_in=DialogMsgCreate(content="something"),
             from_user=User(id=u_id1),
             to_user=User(id=u_id2),
@@ -115,8 +123,8 @@ class TestDialogMsg:
             ("is anybody home?", 3, 4),
             ("what r u doing?", 2, 1),
         ]
-        dial = dialog.create(dialog_mdb, u_id1, u_id2)
         for d in data:
+            dial = dialog.create(dialog_mdb, d[1], d[2])
             dialog_msg.create(
                 dial_msg_mdb,
                 dialog=dial,
@@ -134,3 +142,9 @@ class TestDialogMsg:
         assert dial[1].from_user_id == 1
         assert dial[1].to_user_id == 4
         assert dial[1].content == data[4][0]
+
+    def test_get_top_dialogs(self):
+        dialogs = dialog_msg.get_top_dialogs(dial_msg_mdb)
+        assert dialogs[0].cnt_msg == 4
+        assert dialogs[1].cnt_msg == 2
+        assert dialogs[2].cnt_msg == 1

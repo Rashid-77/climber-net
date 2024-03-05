@@ -22,7 +22,7 @@ class TarantoolSqlDialog:
 
     def select_by_users(self, u_id1, u_id2):
         d = self.conn.call("dialog_select_by_users", (u_id1, u_id2))
-        if d.data[0]:
+        if d.data[0] and len(d.data[0].get("rows")):
             return d.data[0].get("rows")[0]
         return []
 
@@ -76,6 +76,12 @@ class TarantoolSqlDialogMsg:
 
     def get_dialog_(self, stmt: str, u1: int, u2: int, skip: int = 0, limit: int = 100):
         d = self.conn.execute(stmt, {"a": u1, "b": u2, "offs": skip, "lim": limit})
+        return d if len(d) else []
+
+    def get_top_dialogs(self, stmt: str):
+        print("get_top_dialogs()")
+        d = self.conn.execute(stmt)
+        print(d)
         return d if len(d) else []
 
 
