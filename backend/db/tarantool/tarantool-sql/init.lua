@@ -49,7 +49,9 @@ end
 
 function dialog_select_by_users(u_id1, u_id2)
     return box.execute(
-        [[SELECT * FROM dialog WHERE user1_id=(?) and user2_id=(?);]], {u_id1, u_id2}
+        [[
+            SELECT * FROM dialog WHERE user1_id=(?) and user2_id=(?) LIMIT 1;
+        ]], {u_id1, u_id2}
     )
 end
 

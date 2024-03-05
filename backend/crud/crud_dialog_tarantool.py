@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from db.tarantool.db import TarantoolSqlDialog
 from models.dialog import Dialog
@@ -25,20 +24,17 @@ class CRUDDialog:
                 created=datetime.strptime(str(row[3])[:-3], "%Y-%m-%dT%H:%M:%S.%f"),
             )
 
-    def get_multi(
+    def get_by_users(
         self, db: TarantoolSqlDialog, user_a: int, user_b: int
-    ) -> List[DialogInfoFull]:
-        res = db.select_by_users(min(user_a, user_b), max(user_a, user_b))
-        dialogs = [
-            DialogInfoFull(
+    ) -> DialogInfoFull:
+        row = db.select_by_users(min(user_a, user_b), max(user_a, user_b))
+        if row is not None:
+            return DialogInfoFull(
                 id=row[0],
                 user_a=row[1],
                 user_b=row[2],
                 created=datetime.strptime(str(row[3])[:-3], "%Y-%m-%dT%H:%M:%S.%f"),
             )
-            for row in res
-        ]
-        return dialogs
 
     def delete(self, db: TarantoolSqlDialog, id: int):
         d = db.select(id)
