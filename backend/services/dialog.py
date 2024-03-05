@@ -18,7 +18,7 @@ class DialogService:
         from_user: User,
         msg_in: schemas.DialogMsgCreate,
     ) -> schemas.DialogMsgRead:
-        dialog = crud.dialog.get(db, user_a=from_user.id, user_b=to_user.id)
+        dialog = crud.dialog.get_by_users(db, user_a=from_user.id, user_b=to_user.id)
         if not dialog:
             dialog = crud.dialog.create(db, user_a=from_user.id, user_b=to_user.id)
         d = crud.dialog_msg.create(
@@ -32,7 +32,7 @@ class DialogService:
     async def load_dialog_msg_list(
         self, db: Session, user_a: User, user_b: User, limit: int, offset: int
     ) -> List[DialogMessage]:
-        dialog = crud.dialog.get(db, user_a=user_a.id, user_b=user_b.id)
+        dialog = crud.dialog.get_by_users(db, user_a=user_a.id, user_b=user_b.id)
         tops = crud.dialog_msg.get_top_dialogs(db)
         if dialog.id not in [top.id for top in tops]:
             return crud.dialog_msg.get_dialog_list(

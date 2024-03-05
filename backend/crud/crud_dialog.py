@@ -18,7 +18,7 @@ class CRUDDialog(CRUDBase[Dialog, DialogInfoCreate, DialogInfoFull]):
         db.refresh(db_obj)
         return db_obj
 
-    def get(self, db: Session, user_a: int, user_b: int) -> DialogInfoFull:
+    def get_by_users(self, db: Session, user_a: int, user_b: int) -> DialogInfoFull:
         a = min(user_a, user_b)
         b = max(user_a, user_b)
         return (
