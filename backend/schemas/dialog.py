@@ -17,5 +17,5 @@ class DialogInfoFull(DialogInfoBase):
     created: dt.datetime
 
 
-class DialogInfoStat(DialogInfoFull):
+class DialogInfoStat(DialogInfoBase):
     cnt_msg: int
