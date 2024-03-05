@@ -1,9 +1,9 @@
 from typing import List
 
-# from .base import ModelType
 from crud.base import CRUDBase
 from models.dialog import Dialog, DialogMessage
 from models.user import User
+from schemas.dialog import DialogInfoStat
 from schemas.dialog_msg import DialogMsgCreate, DialogMsgUpdate
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
@@ -52,6 +52,24 @@ class CRUDDialogMsg(CRUDBase[DialogMessage, DialogMsgCreate, DialogMsgUpdate]):
             .params({"a": user_a, "b": user_b, "lim": limit, "offs": offset})
         ).all()
         return dialog_list
+
+    def get_top_dialogs(self, db: Session) -> List[DialogInfoStat]:
+        # TODO check if top_chatters exists in cache
+        stmt = """
+                SELECT dm.dialog_id, d.user_a, d.user_b, count(*) as cnt
+                FROM dialogmessage as dm
+                JOIN dialog as d ON d.id = dm.dialog_id
+                GROUP BY dialog_id, d.user_a, d.user_b
+                ORDER BY cnt DESC
+                """
+        top_chatters = [
+            DialogInfoStat(id=r[0], user_a=r[1], user_b=r[2], cnt_msg=r[3])
+            for r in db.execute(text(stmt))
+        ]
+        # TODO limit top
+        top_chatters = top_chatters[:3]
+        # TODO put top_chatters to cache
+        return top_chatters
 
 
 dialog_msg = CRUDDialogMsg(DialogMessage)

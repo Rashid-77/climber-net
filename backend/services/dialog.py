@@ -24,7 +24,7 @@ class DialogService:
         d = crud.dialog_msg.create(
             db, dialog=dialog, obj_in=msg_in, to_user=to_user, from_user=from_user
         )
-        tops = crud.dialog.get_top_dialogs(db)
+        tops = crud.dialog_msg.get_top_dialogs(db)
         if d.dialog_id in [top.id for top in tops]:
             await dialog_cache.lpush_dialog_msg(d)
         return d
@@ -33,7 +33,7 @@ class DialogService:
         self, db: Session, user_a: User, user_b: User, limit: int, offset: int
     ) -> List[DialogMessage]:
         dialog = crud.dialog.get(db, user_a=user_a.id, user_b=user_b.id)
-        tops = crud.dialog.get_top_dialogs(db)
+        tops = crud.dialog_msg.get_top_dialogs(db)
         if dialog.id not in [top.id for top in tops]:
             return crud.dialog_msg.get_dialog_list(
                 db, user_a=user_a.id, user_b=user_b.id, limit=limit, offset=offset
@@ -49,7 +49,7 @@ class DialogService:
         return dialog_msgs
 
     async def warmup_dialogs(self, db: Session):
-        tops = crud.dialog.get_top_dialogs(db)
+        tops = crud.dialog_msg.get_top_dialogs(db)
         for d in [top for top in tops]:
             cache_len = await dialog_cache.len_dialog_msg(d.id)
             dialog_msgs = crud.dialog_msg.get_dialog_list(

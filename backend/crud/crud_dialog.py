@@ -2,7 +2,7 @@ from typing import List
 
 from crud.base import CRUDBase
 from models.dialog import Dialog
-from schemas.dialog import DialogInfoCreate, DialogInfoFull, DialogInfoStat
+from schemas.dialog import DialogInfoCreate, DialogInfoFull
 from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 from utils.log import get_logger
@@ -37,24 +37,6 @@ class CRUDDialog(CRUDBase[Dialog, DialogInfoCreate, DialogInfoFull]):
         return db.execute(
             text("SELECT * FROM dialog WHERE id=:id;"), {"id": id}
         ).first()
-
-    def get_top_dialogs(self, db: Session) -> List[DialogInfoStat]:
-        # TODO check if top_chatters exists in cache
-        stmt = """
-                SELECT dm.dialog_id, d.user_a, d.user_b, count(*) as cnt
-                FROM dialogmessage as dm
-                JOIN dialog as d ON d.id = dm.dialog_id
-                GROUP BY dialog_id, d.user_a, d.user_b
-                ORDER BY cnt DESC
-                """
-        top_chatters = [
-            DialogInfoStat(id=r[0], user_a=r[1], user_b=r[2], cnt_msg=r[3])
-            for r in db.execute(text(stmt))
-        ]
-        # TODO limit top
-        top_chatters = top_chatters[:3]
-        # TODO put top_chatters to cache
-        return top_chatters
 
 
 dialog = CRUDDialog(Dialog)
