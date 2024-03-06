@@ -15,6 +15,7 @@ class DialogMsgRead(DialogMsgCreate):
     from_user_id: int
     to_user_id: int
     created_at: dt.datetime
+    updated_at: dt.datetime
 
 
 class DialogMsgUpdate(DialogMsgCreate):

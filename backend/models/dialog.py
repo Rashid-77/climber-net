@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from db import Base
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.sql import func
@@ -36,7 +38,12 @@ class DialogMessage(Base):
             self.read = data[5]
             self.del_by_sender = data[6]
             self.del_by_recipient = data[7]
-            self.created_at = data[8]
+            self.created_at = datetime.strptime(
+                str(data[8])[:-3], "%Y-%m-%dT%H:%M:%S.%f"
+            )
+            self.updated_at = datetime.strptime(
+                str(data[9])[:-3], "%Y-%m-%dT%H:%M:%S.%f"
+            )
         else:
             super().__init__(**kwargs)
 
