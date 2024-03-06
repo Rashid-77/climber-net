@@ -24,16 +24,8 @@ class CRUDDialogMsg:
         )
         if d is None or not len(d.data):
             return None
-        return DialogMessage(
-            id=d.data[0].get("autoincrement_ids")[0],
-            dialog_id=dialog.id,
-            from_user_id=from_user.id,
-            to_user_id=to_user.id,
-            content=obj_in.content,
-            read=False,
-            del_by_sender=False,
-            del_by_recipient=False,
-        )
+        d = db.select(id=d.data[0].get("autoincrement_ids")[0])
+        return DialogMessage(data=d)
 
     def get(self, db: TarantoolSqlDialogMsg, id: int) -> DialogMessage:
         d = db.select(id)
