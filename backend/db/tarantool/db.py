@@ -79,9 +79,7 @@ class TarantoolSqlDialogMsg:
         return d if len(d) else []
 
     def get_top_dialogs(self, stmt: str):
-        print("get_top_dialogs()")
         d = self.conn.execute(stmt)
-        print(d)
         return d if len(d) else []
 
 
