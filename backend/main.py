@@ -4,7 +4,7 @@ import uvicorn
 from aio_pika import ExchangeType
 from api.api_v1.api import api_router
 from api.deps import get_db
-from db.tarantool.db import dial_msg_mdb
+from db.tarantool.db import t_session
 from fastapi import FastAPI
 from queue_r.queue_rabmq import queue_rabbit
 from services.dialog import dialog_srv
@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     with contextmanager(get_db)() as db:
         await post_srv.warming_up_post_cache(db=db)
         logger.info("posts warmed up")
-        await dialog_srv.warmup_dialogs(db_tdm=dial_msg_mdb)
+        await dialog_srv.warmup_dialogs(db=t_session)
         logger.info("dialogs warmed up")
         await friend_srv.cache_top_popular_users(db=db)
         logger.info("top popular users cached")

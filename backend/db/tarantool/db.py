@@ -1,87 +1,96 @@
 import tarantool
-from utils.config import get_settings
+from tarantool import Connection
+from utils import get_settings
+
+
+class TarantoolConn(Connection):
+    def __init__(self, url: str = "tarantool", port: int = 3301):
+        self.conn = tarantool.connect(url, port)
+
+    def close(self):
+        self.conn.close()
+
 
 t_url = get_settings().tarantool_url
 t_port = get_settings().tarantool_port
+t_session = TarantoolConn(t_url, t_port).conn
 
 
 class TarantoolSqlDialog:
     """message dialog schema beetween 2 users"""
 
-    def __init__(self, url: str = "tarantool", port: int = 3301):
-        self.conn = tarantool.connect(url, port)
+    def insert(self, db: TarantoolConn, u_id_1, u_id_2):
+        return db.call("dialog_insert", (u_id_1, u_id_2))
 
-    def insert(self, u_id_1, u_id_2):
-        return self.conn.call("dialog_insert", (u_id_1, u_id_2))
-
-    def select(self, id):
+    def select(self, db: TarantoolConn, id):
         """Returns None if not found"""
-        d = self.conn.call("dialog_select", (id))
+        d = db.call("dialog_select", (id))
         if len(d.data[0].get("rows")):
             return d.data[0].get("rows")[0]
 
-    def select_by_users(self, u_id1, u_id2):
-        d = self.conn.call("dialog_select_by_users", (u_id1, u_id2))
+    def select_by_users(self, db: TarantoolConn, u_id1, u_id2):
+        d = db.call("dialog_select_by_users", (u_id1, u_id2))
         if d.data[0] and len(d.data[0].get("rows")):
             return d.data[0].get("rows")[0]
         return []
 
-    def select_all(self):
-        d = self.conn.call("dialog_select_all")
+    def select_all(self, db):
+        d = db.call("dialog_select_all")
         if d.data[0]:
             return d.data[0].get("rows")
         return []
 
-    def delete(self, id):
+    def delete_(self, db: TarantoolConn, id):
         """
         Returns " - {'row_count': 0}" if not found
         and returns " - {'row_count': 1}" if deleted
         """
-        return self.conn.call("dialog_del", (id))
+        return db.call("dialog_del", (id))
 
 
 class TarantoolSqlDialogMsg:
     """crud for messages beetween 2 users"""
 
-    def __init__(self, url: str = "tarantool", port: int = 3301):
-        self.conn = tarantool.connect(url, port)
-
-    def insert(self, dial_id, u_id_1, u_id_2, msg: str):
+    def insert(self, db: TarantoolConn, dial_id, u_id_1, u_id_2, msg: str):
         """
         Returns " - {'autoincrement_ids': [1], 'row_count': 1}" if inserted
         where [1] is a id number
         """
-        return self.conn.call(
+        return db.call(
             "dialmsg_insert", (dial_id, u_id_1, u_id_2, msg, False, False, False)
         )
 
-    def select(self, id):
+    def select(self, db: TarantoolConn, id):
         """Returns None if not found"""
-        d = self.conn.call("dialmsg_select", (id))
+        d = db.call("dialmsg_select", (id))
         if len(d.data[0].get("rows")):
             return d.data[0].get("rows")[0]
 
-    def select_all(self, skip: int = 0, limit: int = 100):
-        d = self.conn.call("dialmsg_select_all", (skip, limit))
+    def select_all(self, db: TarantoolConn, skip: int = 0, limit: int = 100):
+        d = db.call("dialmsg_select_all", (skip, limit))
         if d.data[0]:
             return d.data[0].get("rows")
         return []
 
-    def delete(self, id):
+    def delete_(self, db: TarantoolConn, id):
         """
         Returns " - {'row_count': 0}" if not found
         returns " - {'row_count': 1}" if deleted
         """
-        return self.conn.call("dialogmsg_del", (id))
+        return db.call("dialogmsg_del", (id))
 
-    def get_dialog_(self, stmt: str, u1: int, u2: int, skip: int = 0, limit: int = 100):
-        d = self.conn.execute(stmt, {"a": u1, "b": u2, "offs": skip, "lim": limit})
+    def select_dialog(
+        self,
+        db: TarantoolConn,
+        stmt: str,
+        u1: int,
+        u2: int,
+        skip: int = 0,
+        limit: int = 100,
+    ):
+        d = db.execute(stmt, {"a": u1, "b": u2, "offs": skip, "lim": limit})
         return d if len(d) else []
 
-    def get_top_dialogs(self, stmt: str):
-        d = self.conn.execute(stmt)
+    def select_top_dialogs(self, db: TarantoolConn, stmt: str):
+        d = db.execute(stmt)
         return d if len(d) else []
-
-
-dialog_mdb = TarantoolSqlDialog(url=t_url, port=t_port)
-dial_msg_mdb = TarantoolSqlDialogMsg(url=t_url, port=t_port)

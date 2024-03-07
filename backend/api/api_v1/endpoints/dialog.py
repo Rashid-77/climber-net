@@ -4,7 +4,7 @@ import crud
 import models
 import schemas
 from api.deps import get_current_active_user, get_db
-from db.tarantool.db import dial_msg_mdb, dialog_mdb
+from db.tarantool.db import t_session
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from services.dialog import dialog_srv
 from sqlalchemy.orm import Session
@@ -41,8 +41,7 @@ async def create_dialog_msg(
             detail="User can't write to yourself.",
         )
     return await dialog_srv.save_dialog_msg(
-        db_td=dialog_mdb,
-        db_tdm=dial_msg_mdb,
+        db=t_session,
         to_user=user,
         from_user=current_user,
         msg_in=dialog_in,
@@ -71,14 +70,12 @@ async def list_dialog(
             status_code=422,
             detail="Select the user you chatted with",
         )
-    if crud.dialog.get_by_users(dialog_mdb, user_id, current_user.id) is None:
+    if crud.dialog.get_by_users(t_session, user_id, current_user.id) is None:
         return []
-    res = await dialog_srv.load_dialog_msg_list(
-        db_td=dialog_mdb,
-        db_tdm=dial_msg_mdb,
+    return await dialog_srv.load_dialog_msg_list(
+        db=t_session,
         user_a=current_user,
         user_b=user,
         limit=limit,
         offset=offset,
     )
-    return res

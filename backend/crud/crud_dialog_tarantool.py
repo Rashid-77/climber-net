@@ -1,24 +1,24 @@
 from datetime import datetime
 
-from db.tarantool.db import TarantoolSqlDialog
+from db.tarantool.db import TarantoolConn, TarantoolSqlDialog
 from models.dialog import Dialog
 from schemas.dialog import DialogInfoFull
 
 
-class CRUDDialog:
-    def create(self, db: TarantoolSqlDialog, user_a: int, user_b: int) -> Dialog:
+class CRUDDialog(TarantoolSqlDialog):
+    def create(self, db: TarantoolConn, user_a: int, user_b: int) -> Dialog:
         row = self.get_by_users(db, user_a, user_b)
         if row:
             return row
-        res = db.insert(min(user_a, user_b), max(user_a, user_b))
+        res = self.insert(db, min(user_a, user_b), max(user_a, user_b))
         if res is None or not len(res.data):
             return None
         return Dialog(
             id=res.data[0].get("autoincrement_ids")[0], user_a=user_a, user_b=user_b
         )
 
-    def get(self, db: TarantoolSqlDialog, id: int) -> DialogInfoFull:
-        row = db.select(id)
+    def get(self, db: TarantoolConn, id: int) -> DialogInfoFull:
+        row = self.select(db, id)
         if row is not None:
             return DialogInfoFull(
                 id=row[0],
@@ -28,9 +28,9 @@ class CRUDDialog:
             )
 
     def get_by_users(
-        self, db: TarantoolSqlDialog, user_a: int, user_b: int
+        self, db: TarantoolConn, user_a: int, user_b: int
     ) -> DialogInfoFull:
-        row = db.select_by_users(min(user_a, user_b), max(user_a, user_b))
+        row = self.select_by_users(db, min(user_a, user_b), max(user_a, user_b))
         if row is not None and len(row):
             return DialogInfoFull(
                 id=row[0],
@@ -39,8 +39,8 @@ class CRUDDialog:
                 created=datetime.strptime(str(row[3])[:-3], "%Y-%m-%dT%H:%M:%S.%f"),
             )
 
-    def get_multu(self, db: TarantoolSqlDialog) -> DialogInfoFull:
-        dialogs = db.select_all()
+    def get_multu(self, db: TarantoolConn) -> DialogInfoFull:
+        dialogs = self.select_all(db)
         if dialogs is not None and len(dialogs):
             return [
                 DialogInfoFull(
@@ -53,11 +53,11 @@ class CRUDDialog:
             ]
         return []
 
-    def delete(self, db: TarantoolSqlDialog, id: int):
-        d = db.select(id)
+    def delete(self, db: TarantoolConn, id: int):
+        d = self.select(db, id)
         if d is None:
             return None
-        res = db.delete(id)
+        res = self.delete_(db, id)
         if res.data[0].get("row_count") == 1:
             return Dialog(
                 id=id,
