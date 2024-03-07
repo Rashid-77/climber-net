@@ -109,3 +109,10 @@ services:
       - backend
       - websocket1
       - websocket2
+
+  tarantool:
+    build: 
+      context: ./db/tarantool/tarantool-sql/
+      dockerfile: Dockerfile
+    volumes:
+      - ./tarantool_data/:/var/lib/tarantool

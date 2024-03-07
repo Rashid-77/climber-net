@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  backend:
+    container_name: climb-net
+    build:
+      dockerfile: Dockerfile
+    command: [ 'sh', '-c',
+        'python main.py'
+        ]
+    env_file: 
+      - .env
+    volumes:
+      - .:/code
+    ports:
+      - '8055:8055'
+
+  tarantool:
+    build: 
+      context: ./db/tarantool/tarantool-sql/
+      dockerfile: Dockerfile
+    volumes:
+      - ./tarantool_data/:/var/lib/tarantool
+
+  db:
+    image: postgres:15.0-alpine
+    container_name: test_db
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data/pgdata 
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+
+networks:
+  shop_network:
+    driver: bridge
