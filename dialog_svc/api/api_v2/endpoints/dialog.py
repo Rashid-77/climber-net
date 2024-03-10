@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import crud
 import models
@@ -48,20 +48,18 @@ async def create_dialog_msg(
     )
 
 
-@router.get("/{user_id}/list/")  # , response_model=List[schemas.DialogMsgRead])
+@router.get("/{user_id}/list/", response_model=List[schemas.DialogMsgRead])
 async def list_dialog(
     user_id: int,
     offset: Optional[int] = Query(0, ge=0),
     limit: Optional[int] = Query(10, ge=1, le=20),
-    # current_user: models.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
     """
     Get dialog of the current_user with user_id
     """
-    return {"OK": "true"}
     user: models.User = crud.user.get(db, id=user_id)
-    current_user = 1
     if not user:
         raise HTTPException(
             status_code=404,
