@@ -16,6 +16,8 @@ services:
       - .:/code
     ports:
       - '8055:8055'
+    networks:
+      - climber_network
     depends_on:
       - db
       - redis
@@ -38,6 +40,8 @@ services:
       do echo waiting for rabbitmq; sleep 2; done; 
       bash start_websocket_server.sh'
       ]
+    networks:
+      - climber_network
     depends_on:
       - db
       - redis
@@ -58,6 +62,8 @@ services:
       do echo waiting for rabbitmq; sleep 2; done; 
       bash start_websocket_server.sh'
       ]
+    networks:
+      - climber_network
     depends_on:
       - db
       - redis
@@ -75,6 +81,8 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - ./pg_data:/var/lib/postgresql/data/pgdata 
+    networks:
+      - climber_network
 
   redis:
     image: redis:6
@@ -86,6 +94,8 @@ services:
     expose:
         - 6379
     command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - climber_network
 
   rabbitmq:
     image: rabbitmq:3.10.7-management
@@ -98,6 +108,8 @@ services:
     ports:
       - 15672:15672
       - 5672:5672
+    networks:
+      - climber_network
 
   lb:
     image: haproxy
@@ -105,6 +117,8 @@ services:
       - "8000:8000"
     volumes:
       - ./haproxy:/usr/local/etc/haproxy
+    networks:
+      - climber_network
     depends_on:
       - backend
       - websocket1
@@ -116,3 +130,9 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./tarantool_data/:/var/lib/tarantool
+    networks:
+      - climber_network
+
+networks:
+  climber_network:
+    name: climber_net
