@@ -1,0 +1,24 @@
+version: '3.5'
+
+services:
+  dialog:
+    container_name: dialog-climb-svc
+    build:
+      dockerfile: Dockerfile
+    command: [ 'sh', '-c',
+        'python main.py'
+        ]
+    env_file: 
+      - .env
+    volumes:
+      - .:/code
+    ports:
+      - '8060:8000'
+    networks:
+      - climber_proxy_net
+
+networks:
+  climber_proxy_net:
+    name: climber_net
+    external: true
+      
