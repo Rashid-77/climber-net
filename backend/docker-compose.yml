@@ -113,6 +113,7 @@ services:
 
   lb:
     image: haproxy
+    hostname: lb
     ports:
       - "8000:8000"
     volumes:
@@ -132,6 +133,17 @@ services:
       - ./tarantool_data/:/var/lib/tarantool
     networks:
       - climber_network
+
+  proxy:
+    build: ./proxy
+    container_name: nginx-proxy
+    ports:
+      - 80:80
+    volumes:
+    - ./log/nginx_log/:/var/log/nginx/
+    depends_on:
+      - lb
+
 
 networks:
   climber_network:

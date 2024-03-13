@@ -1,0 +1,6 @@
+db_backend_mysql/
+db_test_backend_mysql/
+env/
+log/
+logs/
+pg_data/
