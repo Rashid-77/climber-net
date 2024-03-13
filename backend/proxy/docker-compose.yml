@@ -1,0 +1,21 @@
+version: '2'
+services:
+  app1:
+    image: rash77/fast-api-pc-name
+    container_name: api-1
+    ports:
+      - 8001:8000
+
+  app2:
+    image: rash77/fast-api-pc-name
+    container_name: api-2
+    ports:
+      - 8002:8000
+
+  proxy:
+    build: ./
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+    - ./nginx_log/:/var/log/nginx/

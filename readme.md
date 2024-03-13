@@ -2,10 +2,6 @@
 The goal of this project is to explore methods for improving the performance of web applications.
 Python3.10, FastApi, docker compose V2 are used.
 
-**Prerequisite**
-
-No ORM, DB Postgress or MYSQL
-
 **How to:**
 
 To start project
@@ -17,11 +13,27 @@ Run containers:
 
     docker compose up
 
-And access it go to the browser:
+Get nginx Ip address
 
-    127.0.0.1:8000/docs
+<code>docker inspect   -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nginx-proxy</code>
 
-To fill db with fake users
+Append nginx address to the the hosts
+    
+<code>echo "nginx-Ip-address climber-net' >> /etc/hosts</code>
+
+Get gateway ip address:
+
+<code>docker inspect   -f '{{range.NetworkSettings.Networks}}{{.Gateway}}{{end}}' nginx-proxy</code>
+
+Set gateway address to the proxy_pass in proxy/default.conf
+
+And go to the browser to access it:
+
+    climber-net/docs
+
+
+**To fill db with fake users**
+
 (_Note this'll create a user table also_):
 
 1. create virtual environment in hl_utils
