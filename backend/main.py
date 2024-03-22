@@ -5,8 +5,17 @@ from aio_pika import ExchangeType
 from api.api_v1.api import api_router
 from api.deps import get_db
 from db.tarantool.db import t_session
+from utils.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+    unhandled_exception_handler,
+)
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from queue_r.queue_rabmq import queue_rabbit
+from utils.middleware import log_request_middleware
+from prometheus_client import make_asgi_app
+from starlette.exceptions import HTTPException
 from services.dialog import dialog_srv
 from services.friend import friend_srv
 from services.post import post_srv
@@ -38,6 +47,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(api_router, prefix=get_settings().API_V1_STR)
 
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
+
+app.middleware("http")(log_request_middleware)
+app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 if __name__ == "__main__":
     logger.info(f"main at port={get_settings().app_port}")

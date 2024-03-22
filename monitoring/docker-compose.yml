@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    ports:
+      - 9091:9090
+    networks:
+      - climber_network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    networks:
+      - climber_network
+
+networks:
+  climber_network:
+    name: climber_net
+    external: true
