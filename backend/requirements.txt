@@ -16,3 +16,4 @@ jinja2
 # dev
 pytest
 tarantool
+prometheus-async

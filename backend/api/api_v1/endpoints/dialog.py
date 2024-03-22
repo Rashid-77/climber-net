@@ -6,13 +6,26 @@ import schemas
 from api.deps import get_current_active_user, get_db
 from db.tarantool.db import t_session
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from prometheus_client import Histogram
+from prometheus_async.aio import time
 from services.dialog import dialog_srv
 from sqlalchemy.orm import Session
 from utils.log import get_logger
 
 logger = get_logger(__name__)
-
 router = APIRouter()
+
+D_CREATE_REQ_TIME = Histogram(
+    "dialog_create_req_time_s",
+    "time spent in requests", ["endpoint"],
+    buckets=(.004, .006, .008, .01, .012, .016,  .018, .02, .025, 0.035, .05)
+   )
+
+D_LIST_REQ_TIME = Histogram(
+    "dialog_list_req_time_s",
+    "time spent in requests", ["endpoint"],
+    buckets=(.003, .006, .008, .01, .016, .017, .018, .02, .024, 0.027, .03)
+    )
 
 
 @router.post(
@@ -20,6 +33,7 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
     response_model=schemas.DialogMsgRead,
 )
+@time(D_CREATE_REQ_TIME.labels(endpoint="/create"))
 async def create_dialog_msg(
     user_id: int,
     dialog_in: schemas.DialogMsgCreate,
@@ -49,6 +63,7 @@ async def create_dialog_msg(
 
 
 @router.get("/{user_id}/list/", response_model=List[schemas.DialogMsgRead])
+@time(D_LIST_REQ_TIME.labels(endpoint="/list"))
 async def list_dialog(
     user_id: int,
     offset: Optional[int] = Query(0, ge=0),
